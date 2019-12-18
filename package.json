@@ -1,0 +1,22 @@
+{
+  "name": "space-rocks",
+  "version": "0.1.0",
+  "description": " Space Rocks is a wholly original 2D game concept in which a player ship flies around shooting space rocks into smaller pieces and trying not to get hit and killed in the process. I'm sure there's a name for this kind of rock but I can't think of it right now. It'll come to me. Space rocks.",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "npx gulp ts",
+    "watch": "npx gulp ts:w"
+  },
+  "author": "Tom Dancer",
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.7.3",
+    "webpack-stream": "^5.2.1"
+  },
+  "dependencies": {
+    "anim-loop-engine": "github:tdous/anim-loop-engine",
+    "easel-js": "github:tdous/easel-js"
+  }
+}

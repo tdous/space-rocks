@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css?family=VT323&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body,
+canvas#sr {
+  height: 100vh;
+  overflow: hidden;
+  width: 100vw;
+}
+
+canvas#sr {
+  background: #000;
+  outline: none;
+  z-index: 1;
+}
