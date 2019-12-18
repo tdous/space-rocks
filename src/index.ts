@@ -1,5 +1,5 @@
-// import { AnimLoopEngine } from 'anim-loop-engine';
-import { AnimLoopEngine } from '../../anim-loop-engine/lib/index';
+import { AnimLoopEngine } from 'anim-loop-engine';
+// import { AnimLoopEngine } from '../../anim-loop-engine/lib/index';
 // import { Easel } from '../../easel-js/lib/index';
 // import { arc } from '../../easel-js/lib/draw/arc';
 // import { line } from '../../easel-js/lib/draw/line';
@@ -294,6 +294,8 @@ const drawBullets = (dt: number) => {
   }
 };
 
+// Check for player
+
 // Call updates and redraws for all entities
 const update = (ts: number = 0, dt: number = 0) => {
   if (paused || !gameHasFocus) {
@@ -304,6 +306,7 @@ const update = (ts: number = 0, dt: number = 0) => {
   drawRocks(dt);
   drawPlayer(dt);
   drawBullets(dt);
+  // checkPlayerCollisions();
 
   easel.cx.fillText(
     'Space Rocks: Space Rocks!',

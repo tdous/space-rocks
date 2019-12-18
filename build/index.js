@@ -86,10 +86,10 @@
 /************************************************************************/
 /******/ ({
 
-/***/ "../anim-loop-engine/lib/index.js":
-/*!****************************************!*\
-  !*** ../anim-loop-engine/lib/index.js ***!
-  \****************************************/
+/***/ "./node_modules/anim-loop-engine/lib/index.js":
+/*!****************************************************!*\
+  !*** ./node_modules/anim-loop-engine/lib/index.js ***!
+  \****************************************************/
 /*! exports provided: AnimLoopEngine */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -434,7 +434,7 @@ var Rock = /** @class */ (function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _anim_loop_engine_lib_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../anim-loop-engine/lib/index */ "../anim-loop-engine/lib/index.js");
+/* harmony import */ var anim_loop_engine__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! anim-loop-engine */ "./node_modules/anim-loop-engine/lib/index.js");
 /* harmony import */ var easel_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! easel-js */ "./node_modules/easel-js/lib/index.js");
 /* harmony import */ var easel_js_lib_draw_arc__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! easel-js/lib/draw/arc */ "./node_modules/easel-js/lib/draw/arc.js");
 /* harmony import */ var easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! easel-js/lib/draw/line */ "./node_modules/easel-js/lib/draw/line.js");
@@ -442,8 +442,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _entities_Bullet__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./entities/Bullet */ "./src/entities/Bullet.ts");
 /* harmony import */ var _entities_Player__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./entities/Player */ "./src/entities/Player.ts");
 /* harmony import */ var _entities_Rock__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./entities/Rock */ "./src/entities/Rock.ts");
-// import { AnimLoopEngine } from 'anim-loop-engine';
 
+// import { AnimLoopEngine } from '../../anim-loop-engine/lib/index';
 // import { Easel } from '../../easel-js/lib/index';
 // import { arc } from '../../easel-js/lib/draw/arc';
 // import { line } from '../../easel-js/lib/draw/line';
@@ -459,7 +459,7 @@ var initNumRocks = 4;
 var gameHasFocus = true;
 var paused = false;
 var fired = false;
-var engine = new _anim_loop_engine_lib_index__WEBPACK_IMPORTED_MODULE_0__["AnimLoopEngine"]();
+var engine = new anim_loop_engine__WEBPACK_IMPORTED_MODULE_0__["AnimLoopEngine"]();
 var easel = new easel_js__WEBPACK_IMPORTED_MODULE_1__["Easel"]('sr', { tabIndex: 0, focus: true });
 easel.config({
     fillStyle: '#FFF',
@@ -665,6 +665,7 @@ var drawBullets = function (dt) {
         i++;
     }
 };
+// Check for player
 // Call updates and redraws for all entities
 var update = function (ts, dt) {
     if (ts === void 0) { ts = 0; }
@@ -676,6 +677,7 @@ var update = function (ts, dt) {
     drawRocks(dt);
     drawPlayer(dt);
     drawBullets(dt);
+    // checkPlayerCollisions();
     easel.cx.fillText('Space Rocks: Space Rocks!', easel.w / 2, easel.h / 2 - 100);
 };
 engine.addTask(update);
