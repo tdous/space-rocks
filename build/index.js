@@ -153,17 +153,38 @@ class AnimLoopEngine {
 
 /***/ }),
 
-/***/ "../easel-js/lib/draw/line.js":
-/*!************************************!*\
-  !*** ../easel-js/lib/draw/line.js ***!
-  \************************************/
+/***/ "./node_modules/easel-js/lib/draw/arc.js":
+/*!***********************************************!*\
+  !*** ./node_modules/easel-js/lib/draw/arc.js ***!
+  \***********************************************/
+/*! exports provided: arc */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "arc", function() { return arc; });
+/* harmony import */ var _mode__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./mode */ "./node_modules/easel-js/lib/draw/mode.js");
+
+const arc = (cx, x, y, radius, radFrom, radTo, mode, antiClockwise = false) => {
+    cx.beginPath();
+    cx.arc(x, y, radius, radFrom, radTo, antiClockwise);
+    Object(_mode__WEBPACK_IMPORTED_MODULE_0__["drawWithMode"])(cx, mode);
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/easel-js/lib/draw/line.js":
+/*!************************************************!*\
+  !*** ./node_modules/easel-js/lib/draw/line.js ***!
+  \************************************************/
 /*! exports provided: line */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "line", function() { return line; });
-/* harmony import */ var _mode__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./mode */ "../easel-js/lib/draw/mode.js");
+/* harmony import */ var _mode__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./mode */ "./node_modules/easel-js/lib/draw/mode.js");
 
 const line = (cx, points, mode, close) => {
     cx.beginPath();
@@ -181,10 +202,10 @@ const line = (cx, points, mode, close) => {
 
 /***/ }),
 
-/***/ "../easel-js/lib/draw/mode.js":
-/*!************************************!*\
-  !*** ../easel-js/lib/draw/mode.js ***!
-  \************************************/
+/***/ "./node_modules/easel-js/lib/draw/mode.js":
+/*!************************************************!*\
+  !*** ./node_modules/easel-js/lib/draw/mode.js ***!
+  \************************************************/
 /*! exports provided: drawWithMode */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -220,10 +241,10 @@ const drawWithMode = (cx, mode) => {
 
 /***/ }),
 
-/***/ "../easel-js/lib/index.js":
-/*!********************************!*\
-  !*** ../easel-js/lib/index.js ***!
-  \********************************/
+/***/ "./node_modules/easel-js/lib/index.js":
+/*!********************************************!*\
+  !*** ./node_modules/easel-js/lib/index.js ***!
+  \********************************************/
 /*! exports provided: Easel */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -265,6 +286,34 @@ class Easel {
         this.cx.clearRect(0, 0, this.w, this.h);
     }
 }
+
+
+/***/ }),
+
+/***/ "./src/entities/Bullet.ts":
+/*!********************************!*\
+  !*** ./src/entities/Bullet.ts ***!
+  \********************************/
+/*! exports provided: Bullet */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Bullet", function() { return Bullet; });
+var Bullet = /** @class */ (function () {
+    function Bullet(x, y, vx, vy) {
+        if (x === void 0) { x = 0; }
+        if (y === void 0) { y = 0; }
+        if (vx === void 0) { vx = 0; }
+        if (vy === void 0) { vy = 0; }
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+    }
+    return Bullet;
+}());
+
 
 
 /***/ }),
@@ -386,23 +435,32 @@ var Rock = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _anim_loop_engine_lib_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../anim-loop-engine/lib/index */ "../anim-loop-engine/lib/index.js");
-/* harmony import */ var _easel_js_lib_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../easel-js/lib/index */ "../easel-js/lib/index.js");
-/* harmony import */ var _easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../easel-js/lib/draw/line */ "../easel-js/lib/draw/line.js");
-/* harmony import */ var _utils_math__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utils/math */ "./src/utils/math.ts");
-/* harmony import */ var _entities_Player__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./entities/Player */ "./src/entities/Player.ts");
-/* harmony import */ var _entities_Rock__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./entities/Rock */ "./src/entities/Rock.ts");
+/* harmony import */ var easel_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! easel-js */ "./node_modules/easel-js/lib/index.js");
+/* harmony import */ var easel_js_lib_draw_arc__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! easel-js/lib/draw/arc */ "./node_modules/easel-js/lib/draw/arc.js");
+/* harmony import */ var easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! easel-js/lib/draw/line */ "./node_modules/easel-js/lib/draw/line.js");
+/* harmony import */ var _utils_math__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./utils/math */ "./src/utils/math.ts");
+/* harmony import */ var _entities_Bullet__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./entities/Bullet */ "./src/entities/Bullet.ts");
+/* harmony import */ var _entities_Player__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./entities/Player */ "./src/entities/Player.ts");
+/* harmony import */ var _entities_Rock__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./entities/Rock */ "./src/entities/Rock.ts");
 // import { AnimLoopEngine } from 'anim-loop-engine';
 
+// import { Easel } from '../../easel-js/lib/index';
+// import { arc } from '../../easel-js/lib/draw/arc';
+// import { line } from '../../easel-js/lib/draw/line';
+// import { rect } from '../../easel-js/lib/draw/rect';
 
 
-// import { Easel } from 'easel-js';
 
 
 
+
+
+var initNumRocks = 4;
 var gameHasFocus = true;
 var paused = false;
+var fired = false;
 var engine = new _anim_loop_engine_lib_index__WEBPACK_IMPORTED_MODULE_0__["AnimLoopEngine"]();
-var easel = new _easel_js_lib_index__WEBPACK_IMPORTED_MODULE_1__["Easel"]('sr', { tabIndex: 0, focus: true });
+var easel = new easel_js__WEBPACK_IMPORTED_MODULE_1__["Easel"]('sr', { tabIndex: 0, focus: true });
 easel.config({
     fillStyle: '#FFF',
     font: '50px VT323',
@@ -413,7 +471,7 @@ easel.config({
 });
 var scalingBase = easel.w > easel.h ? easel.w : easel.h;
 var rockRadius = scalingBase / 15;
-var rockBaseVel = scalingBase / 40;
+var rockBaseVel = scalingBase / 15;
 var calcRockSpawnCoord = function (axis) {
     if (axis === 'x') {
         return Math.random() < 0.5
@@ -427,7 +485,7 @@ var calcRockSpawnCoord = function (axis) {
     }
 };
 var rotateShape = function (shape, angle) {
-    var rad = Object(_utils_math__WEBPACK_IMPORTED_MODULE_3__["degreesToRadians"])(angle);
+    var rad = Object(_utils_math__WEBPACK_IMPORTED_MODULE_4__["degreesToRadians"])(angle);
     var rShape = [];
     for (var i = 0; i < shape.length; i++) {
         rShape[i] = [
@@ -454,30 +512,26 @@ var translateShape = function (shape, matrix) {
 };
 var randomNeg = function () { return (Math.random() < 0.5 ? 1 : -1); };
 // GENERATE SHIT
+var aBullets = [];
 // Gen player
-var plyr = new _entities_Player__WEBPACK_IMPORTED_MODULE_4__["Player"]();
+var player = new _entities_Player__WEBPACK_IMPORTED_MODULE_6__["Player"]();
 // Gen rocks
 var aRocks = [];
-for (var i = 0; i < 5; i++) {
-    aRocks.push(new _entities_Rock__WEBPACK_IMPORTED_MODULE_5__["Rock"](calcRockSpawnCoord('x'), calcRockSpawnCoord('y'), 
-    // -10,
-    // -10,
-    (Math.random() * rockBaseVel + 50) * randomNeg(), (Math.random() * rockBaseVel + 50) * randomNeg(), Math.random() * 100 * randomNeg(), rockRadius));
-    // console.log(...aRocks);
+for (var i = 0; i < 4; i++) {
+    var vx = (Math.random() * rockBaseVel + 15) * randomNeg();
+    var vy = (Math.random() * rockBaseVel + 15) * randomNeg();
+    aRocks.push(new _entities_Rock__WEBPACK_IMPORTED_MODULE_7__["Rock"](calcRockSpawnCoord('x'), calcRockSpawnCoord('y'), vx, vy, Math.random() * 100 * randomNeg(), rockRadius));
 }
 // Gen rock's screen boundaries
 var genRockInner = function (radius) {
     return [0 + radius, easel.w - radius, easel.h - radius, 0 + radius];
 };
 // Draw an entity shape at calced location and rotation
-var drawEntity = function (entity, dt) {
+var drawEntity = function (entity, dt, fill) {
     if (dt === void 0) { dt = 0; }
     var drawable = [];
     // Screen wrap boundaries
     var inner = genRockInner(entity.radius);
-    entity.x += parseInt((entity.vx * dt).toFixed(4));
-    entity.y += parseInt((entity.vy * dt).toFixed(4));
-    entity.r += entity.va * dt;
     // Don't accrue large spin angles
     if (entity.r > 360) {
         entity.r -= 360;
@@ -539,7 +593,7 @@ var drawEntity = function (entity, dt) {
     }
     var j = 0;
     while (j < drawable.length) {
-        Object(_easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_2__["line"])(easel.cx, translateShape(rotateShape(entity.getShape(), entity.r), drawable[j]), 's', true);
+        Object(easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_3__["line"])(easel.cx, translateShape(rotateShape(entity.getShape(), entity.r), drawable[j]), fill ? 'fs' : 's', true);
         j++;
     }
 };
@@ -549,8 +603,8 @@ var drawRocks = function (dt) {
     var i = 0;
     while (i < aRocks.length) {
         var r = aRocks[i];
-        r.x += parseInt((r.vx * dt).toFixed(4));
-        r.y += parseInt((r.vy * dt).toFixed(4));
+        r.x += r.vx * dt;
+        r.y += r.vy * dt;
         r.r += r.va * dt;
         // Don't accrue large spin angles
         if (r.r > 360) {
@@ -566,28 +620,50 @@ var drawRocks = function (dt) {
 // Calculate and draw player ship
 var drawPlayer = function (dt) {
     if (dt === void 0) { dt = 0; }
-    plyr.x = plyr.x !== 0 ? plyr.x : easel.w / 2;
-    plyr.y = plyr.y !== 0 ? plyr.y : easel.h / 2;
-    plyr.r += plyr.va * dt;
-    if (plyr.thrust || plyr.reverse) {
-        plyr.tx =
-            Math.sin(Object(_utils_math__WEBPACK_IMPORTED_MODULE_3__["degreesToRadians"])(plyr.reverse ? plyr.r + 180 : plyr.r)) * 400;
-        plyr.ty =
-            -Math.cos(Object(_utils_math__WEBPACK_IMPORTED_MODULE_3__["degreesToRadians"])(plyr.reverse ? plyr.r + 180 : plyr.r)) * 400;
-        if (plyr.vx < plyr.tx || plyr.vx > plyr.tx) {
-            plyr.vx += plyr.reverse
-                ? ((plyr.tx - plyr.vx) * dt) / 2
-                : (plyr.tx - plyr.vx) * dt;
+    player.x = player.x !== 0 ? player.x : easel.w / 2;
+    player.y = player.y !== 0 ? player.y : easel.h / 2;
+    player.r += player.va * dt;
+    if (player.thrust || player.reverse) {
+        player.tx =
+            Math.sin(Object(_utils_math__WEBPACK_IMPORTED_MODULE_4__["degreesToRadians"])(player.reverse ? player.r + 180 : player.r)) *
+                400;
+        player.ty =
+            -Math.cos(Object(_utils_math__WEBPACK_IMPORTED_MODULE_4__["degreesToRadians"])(player.reverse ? player.r + 180 : player.r)) *
+                400;
+        if (player.vx < player.tx || player.vx > player.tx) {
+            player.vx += player.reverse
+                ? (player.tx / 2 - player.vx) * dt
+                : (player.tx - player.vx) * dt;
         }
-        if (plyr.vy < plyr.ty || plyr.vy > plyr.ty) {
-            plyr.vy += plyr.reverse
-                ? ((plyr.ty - plyr.vy) * dt) / 2
-                : (plyr.ty - plyr.vy) * dt;
+        if (player.vy < player.ty || player.vy > player.ty) {
+            player.vy += player.reverse
+                ? (player.ty / 2 - player.vy) * dt
+                : (player.ty - player.vy) * dt;
         }
     }
-    plyr.x += plyr.vx * dt;
-    plyr.y += plyr.vy * dt;
-    drawEntity(plyr, dt);
+    player.x += player.vx * dt;
+    player.y += player.vy * dt;
+    drawEntity(player, dt);
+};
+// Fire a bullet
+var fireBullet = function () {
+    var rad = Object(_utils_math__WEBPACK_IMPORTED_MODULE_4__["degreesToRadians"])(player.r);
+    aBullets.push(new _entities_Bullet__WEBPACK_IMPORTED_MODULE_5__["Bullet"](player.x + Math.sin(rad) * 14, player.y + -Math.cos(rad) * 14, player.vx + Math.sin(rad) * 350, player.vy + -Math.cos(rad) * 350));
+};
+// Draw bullets
+var drawBullets = function (dt) {
+    var i = 0;
+    while (i < aBullets.length) {
+        var b = aBullets[i];
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        Object(easel_js_lib_draw_arc__WEBPACK_IMPORTED_MODULE_2__["arc"])(easel.cx, b.x, b.y, 2, 0, 2 * Math.PI, 'f');
+        if (b.x < 0 || b.x > easel.w || b.y < 0 || b.y > easel.h) {
+            delete aBullets[i];
+            aBullets = aBullets.filter(function (b) { return typeof b !== 'undefined'; });
+        }
+        i++;
+    }
 };
 // Call updates and redraws for all entities
 var update = function (ts, dt) {
@@ -599,6 +675,7 @@ var update = function (ts, dt) {
     easel.wipe();
     drawRocks(dt);
     drawPlayer(dt);
+    drawBullets(dt);
     easel.cx.fillText('Space Rocks: Space Rocks!', easel.w / 2, easel.h / 2 - 100);
 };
 engine.addTask(update);
@@ -616,32 +693,41 @@ var stop = function () {
 easel.cv.onkeydown = function (e) {
     switch (e.keyCode) {
         case 38: // Up
-            plyr.thrust = true;
+            player.thrust = true;
             break;
         case 40: // Down
-            plyr.reverse = true;
-            // plyr.vx *= -0.2;
-            // plyr.vy *= -0.2;
+            player.reverse = true;
+            // player.vx *= -0.2;
+            // player.vy *= -0.2;
             break;
         case 37: // Left
-            plyr.va = -200;
+            player.va = -300;
             break;
         case 39: // Right
-            plyr.va = 200;
+            player.va = 300;
+            break;
+        case 32: // Space (fire)
+            if (!fired) {
+                fired = true;
+                fireBullet();
+            }
             break;
     }
 };
 easel.cv.onkeyup = function (e) {
     switch (e.keyCode) {
         case 38: // Up
-            plyr.thrust = false;
+            player.thrust = false;
             break;
         case 40: // Down
-            plyr.reverse = false;
+            player.reverse = false;
             break;
         case 37: // Left
         case 39: // Right
-            plyr.va = 0;
+            player.va = 0;
+            break;
+        case 32: // Space (stop firing)
+            fired = false;
             break;
     }
 };

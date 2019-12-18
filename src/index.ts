@@ -1,18 +1,24 @@
 // import { AnimLoopEngine } from 'anim-loop-engine';
 import { AnimLoopEngine } from '../../anim-loop-engine/lib/index';
-import { Easel } from '../../easel-js/lib/index';
-import { arc } from '../../easel-js/lib/draw/arc';
-import { line } from '../../easel-js/lib/draw/line';
-import { rect } from '../../easel-js/lib/draw/rect';
-// import { Easel } from 'easel-js';
+// import { Easel } from '../../easel-js/lib/index';
+// import { arc } from '../../easel-js/lib/draw/arc';
+// import { line } from '../../easel-js/lib/draw/line';
+// import { rect } from '../../easel-js/lib/draw/rect';
+import { Easel } from 'easel-js';
+import { arc } from 'easel-js/lib/draw/arc';
+import { line } from 'easel-js/lib/draw/line';
+import { rect } from 'easel-js/lib/draw/rect';
 
 import { degreesToRadians, radiansToDegrees } from './utils/math';
 
+import { Bullet } from './entities/Bullet';
 import { Player } from './entities/Player';
 import { Rock } from './entities/Rock';
 
+let initNumRocks = 4;
 let gameHasFocus = true;
 let paused = false;
+let fired = false;
 
 const engine = new AnimLoopEngine();
 const easel = new Easel('sr', { tabIndex: 0, focus: true });
@@ -27,7 +33,7 @@ easel.config({
 
 const scalingBase = easel.w > easel.h ? easel.w : easel.h;
 const rockRadius = scalingBase / 15;
-const rockBaseVel = scalingBase / 40;
+const rockBaseVel = scalingBase / 15;
 
 const calcRockSpawnCoord = (axis: string) => {
   if (axis === 'x') {
@@ -73,26 +79,26 @@ const translateShape = (shape: number[][], matrix: number[]) => {
 const randomNeg = () => (Math.random() < 0.5 ? 1 : -1);
 
 // GENERATE SHIT
+let aBullets: Bullet[] = [];
 
 // Gen player
-const plyr = new Player();
+const player = new Player();
 
 // Gen rocks
 let aRocks: Rock[] = [];
-for (let i = 0; i < 5; i++) {
+for (let i = 0; i < 4; i++) {
+  let vx = (Math.random() * rockBaseVel + 15) * randomNeg();
+  let vy = (Math.random() * rockBaseVel + 15) * randomNeg();
   aRocks.push(
     new Rock(
       calcRockSpawnCoord('x'),
       calcRockSpawnCoord('y'),
-      // -10,
-      // -10,
-      (Math.random() * rockBaseVel + 50) * randomNeg(),
-      (Math.random() * rockBaseVel + 50) * randomNeg(),
+      vx,
+      vy,
       Math.random() * 100 * randomNeg(),
       rockRadius
     )
   );
-  // console.log(...aRocks);
 }
 
 // Gen rock's screen boundaries
@@ -101,15 +107,11 @@ const genRockInner = (radius: number) => {
 };
 
 // Draw an entity shape at calced location and rotation
-const drawEntity = (entity: Rock | Player, dt: number = 0) => {
+const drawEntity = (entity: Rock | Player, dt: number = 0, fill?: boolean) => {
   let drawable: number[][] = [];
 
   // Screen wrap boundaries
   const inner = genRockInner(entity.radius);
-
-  entity.x += parseInt((entity.vx * dt).toFixed(4));
-  entity.y += parseInt((entity.vy * dt).toFixed(4));
-  entity.r += entity.va * dt;
 
   // Don't accrue large spin angles
   if (entity.r > 360) {
@@ -195,7 +197,7 @@ const drawEntity = (entity: Rock | Player, dt: number = 0) => {
     line(
       easel.cx,
       translateShape(rotateShape(entity.getShape(), entity.r), drawable[j]),
-      's',
+      fill ? 'fs' : 's',
       true
     );
 
@@ -209,8 +211,8 @@ const drawRocks = (dt: number = 0) => {
   while (i < aRocks.length) {
     let r = aRocks[i];
 
-    r.x += parseInt((r.vx * dt).toFixed(4));
-    r.y += parseInt((r.vy * dt).toFixed(4));
+    r.x += r.vx * dt;
+    r.y += r.vy * dt;
     r.r += r.va * dt;
 
     // Don't accrue large spin angles
@@ -228,33 +230,68 @@ const drawRocks = (dt: number = 0) => {
 
 // Calculate and draw player ship
 const drawPlayer = (dt: number = 0) => {
-  plyr.x = plyr.x !== 0 ? plyr.x : easel.w / 2;
-  plyr.y = plyr.y !== 0 ? plyr.y : easel.h / 2;
+  player.x = player.x !== 0 ? player.x : easel.w / 2;
+  player.y = player.y !== 0 ? player.y : easel.h / 2;
 
-  plyr.r += plyr.va * dt;
+  player.r += player.va * dt;
 
-  if (plyr.thrust || plyr.reverse) {
-    plyr.tx =
-      Math.sin(degreesToRadians(plyr.reverse ? plyr.r + 180 : plyr.r)) * 400;
-    plyr.ty =
-      -Math.cos(degreesToRadians(plyr.reverse ? plyr.r + 180 : plyr.r)) * 400;
+  if (player.thrust || player.reverse) {
+    player.tx =
+      Math.sin(degreesToRadians(player.reverse ? player.r + 180 : player.r)) *
+      400;
+    player.ty =
+      -Math.cos(degreesToRadians(player.reverse ? player.r + 180 : player.r)) *
+      400;
 
-    if (plyr.vx < plyr.tx || plyr.vx > plyr.tx) {
-      plyr.vx += plyr.reverse
-        ? ((plyr.tx - plyr.vx) * dt) / 2
-        : (plyr.tx - plyr.vx) * dt;
+    if (player.vx < player.tx || player.vx > player.tx) {
+      player.vx += player.reverse
+        ? (player.tx / 2 - player.vx) * dt
+        : (player.tx - player.vx) * dt;
     }
-    if (plyr.vy < plyr.ty || plyr.vy > plyr.ty) {
-      plyr.vy += plyr.reverse
-        ? ((plyr.ty - plyr.vy) * dt) / 2
-        : (plyr.ty - plyr.vy) * dt;
+    if (player.vy < player.ty || player.vy > player.ty) {
+      player.vy += player.reverse
+        ? (player.ty / 2 - player.vy) * dt
+        : (player.ty - player.vy) * dt;
     }
   }
 
-  plyr.x += plyr.vx * dt;
-  plyr.y += plyr.vy * dt;
+  player.x += player.vx * dt;
+  player.y += player.vy * dt;
 
-  drawEntity(plyr, dt);
+  drawEntity(player, dt);
+};
+
+// Fire a bullet
+const fireBullet = () => {
+  let rad = degreesToRadians(player.r);
+  aBullets.push(
+    new Bullet(
+      player.x + Math.sin(rad) * 14,
+      player.y + -Math.cos(rad) * 14,
+      player.vx + Math.sin(rad) * 350,
+      player.vy + -Math.cos(rad) * 350
+    )
+  );
+};
+
+// Draw bullets
+const drawBullets = (dt: number) => {
+  let i = 0;
+  while (i < aBullets.length) {
+    let b = aBullets[i];
+
+    b.x += b.vx * dt;
+    b.y += b.vy * dt;
+
+    arc(easel.cx, b.x, b.y, 2, 0, 2 * Math.PI, 'f');
+
+    if (b.x < 0 || b.x > easel.w || b.y < 0 || b.y > easel.h) {
+      delete aBullets[i];
+      aBullets = aBullets.filter(b => typeof b !== 'undefined');
+    }
+
+    i++;
+  }
 };
 
 // Call updates and redraws for all entities
@@ -266,6 +303,7 @@ const update = (ts: number = 0, dt: number = 0) => {
   easel.wipe();
   drawRocks(dt);
   drawPlayer(dt);
+  drawBullets(dt);
 
   easel.cx.fillText(
     'Space Rocks: Space Rocks!',
@@ -291,37 +329,48 @@ const stop = () => {
 easel.cv.onkeydown = (e: KeyboardEvent) => {
   switch (e.keyCode) {
     case 38: // Up
-      plyr.thrust = true;
+      player.thrust = true;
       break;
 
     case 40: // Down
-      plyr.reverse = true;
-      // plyr.vx *= -0.2;
-      // plyr.vy *= -0.2;
+      player.reverse = true;
+      // player.vx *= -0.2;
+      // player.vy *= -0.2;
       break;
 
     case 37: // Left
-      plyr.va = -200;
+      player.va = -300;
       break;
 
     case 39: // Right
-      plyr.va = 200;
+      player.va = 300;
+      break;
+
+    case 32: // Space (fire)
+      if (!fired) {
+        fired = true;
+        fireBullet();
+      }
       break;
   }
 };
 easel.cv.onkeyup = (e: KeyboardEvent) => {
   switch (e.keyCode) {
     case 38: // Up
-      plyr.thrust = false;
+      player.thrust = false;
       break;
 
     case 40: // Down
-      plyr.reverse = false;
+      player.reverse = false;
       break;
 
     case 37: // Left
     case 39: // Right
-      plyr.va = 0;
+      player.va = 0;
+      break;
+
+    case 32: // Space (stop firing)
+      fired = false;
       break;
   }
 };
