@@ -484,6 +484,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _entities_Player__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./entities/Player */ "./src/entities/Player.ts");
 /* harmony import */ var _entities_Rock__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./entities/Rock */ "./src/entities/Rock.ts");
 /* harmony import */ var _entities_Splodicle__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./entities/Splodicle */ "./src/entities/Splodicle.ts");
+var __spreadArrays = (undefined && undefined.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 
 // import { AnimLoopEngine } from '../../anim-loop-engine/lib/index';
 // import { Easel } from '../../easel-js/lib/index';
@@ -586,7 +593,7 @@ var randomNeg = function () { return (Math.random() < 0.5 ? 1 : -1); };
 // Gen player
 var player = new _entities_Player__WEBPACK_IMPORTED_MODULE_6__["Player"]();
 // Gen rocks
-for (var i = 0; i < 3; i++) {
+for (var i = 0; i < 6; i++) {
     var vx = (Math.random() * rockBaseVel + 15) * randomNeg();
     var vy = (Math.random() * rockBaseVel + 15) * randomNeg();
     aRocks.push(new _entities_Rock__WEBPACK_IMPORTED_MODULE_7__["Rock"](calcRockSpawnCoord('x'), calcRockSpawnCoord('y'), vx, vy, Math.random() * 100 * randomNeg(), rockRadius));
@@ -614,10 +621,21 @@ var fireBullet = function () {
     var rad = Object(_utils_math__WEBPACK_IMPORTED_MODULE_4__["degreesToRadians"])(player.r);
     aBullets.push(new _entities_Bullet__WEBPACK_IMPORTED_MODULE_5__["Bullet"](player.x + Math.sin(rad) * 14, player.y + -Math.cos(rad) * 14, player.vx + Math.sin(rad) * 350, player.vy + -Math.cos(rad) * 350));
 };
+// Kill a rock
+var killRock = function (i) {
+    if (aRocks[i].gen > 1) {
+        var j = 0;
+        while (j < 2) {
+            aRocks.push(new _entities_Rock__WEBPACK_IMPORTED_MODULE_7__["Rock"](aRocks[i].x + Math.random() * aRocks[i].radius / 2 * randomNeg(), aRocks[i].y + Math.random() * aRocks[i].radius / 2 * randomNeg(), aRocks[i].vx + Math.random() * rockBaseVel * randomNeg(), aRocks[i].vy + Math.random() * rockBaseVel * randomNeg(), Math.random() * 100 * randomNeg(), rockRadius, aRocks[i].gen - 1));
+            j++;
+        }
+    }
+    delete aRocks[i];
+    aRocks = aRocks.filter(function (b) { return typeof b !== 'undefined'; });
+};
 // --- Draw things ---
 // Draw an entity shape at calced location and rotation
-var drawEntity = function (entity, dt, colliders) {
-    if (dt === void 0) { dt = 0; }
+var drawEntity = function (index, entity, colliders) {
     var drawable = [];
     // Screen wrap boundaries
     var inner = genRockInner(entity.radius);
@@ -670,7 +688,7 @@ var drawEntity = function (entity, dt, colliders) {
     var j = 0;
     while (j < drawable.length) {
         Object(easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_3__["line"])(easel.cx, translateShape(rotateShape(entity.getShape(), entity.r), drawable[j]), 's', true);
-        colliders.push(drawable[j]);
+        colliders.push(__spreadArrays(drawable[j], [index]));
         j++;
     }
 };
@@ -690,16 +708,13 @@ var drawRocks = function (dt) {
         else if (r.r < -360) {
             r.r += 360;
         }
-        drawEntity(r, dt, collisionRocks);
+        drawEntity(i, r, collisionRocks);
         i++;
     }
 };
 // Calculate and draw player ship
 var drawPlayer = function (dt) {
     if (dt === void 0) { dt = 0; }
-    if (sploded) {
-        return;
-    }
     player.x = player.x !== 0 ? player.x : easel.w / 2;
     player.y = player.y !== 0 ? player.y : easel.h / 2;
     player.r += player.va * dt;
@@ -723,7 +738,7 @@ var drawPlayer = function (dt) {
     }
     player.x += player.vx * dt;
     player.y += player.vy * dt;
-    drawEntity(player, dt, collisionPlayers);
+    drawEntity(0, player, collisionPlayers);
 };
 // Draw player explosion
 var drawSplosion = function (dt) {
@@ -756,11 +771,30 @@ var drawBullets = function (dt) {
         i++;
     }
 };
+// Check for bullet collisions
+var checkBulletCollisions = function () {
+    // For each collideable rock...
+    var i = 0;
+    while (i < collisionRocks.length) {
+        // ...check each bullet
+        var j = 0;
+        while (j < aBullets.length) {
+            // Distance from x-y diffs
+            var dx = collisionRocks[i][0] - aBullets[j].x;
+            var dy = collisionRocks[i][1] - aBullets[j].y;
+            // If distance apart is less than combined radii, collision
+            if (Math.sqrt(dx * dx + dy * dy) < collisionRocks[i][2]) {
+                delete aBullets[j];
+                aBullets = aBullets.filter(function (b) { return typeof b !== 'undefined'; });
+                killRock(collisionRocks[i][3]);
+            }
+            j++;
+        }
+        i++;
+    }
+};
 // Check for player collisions
 var checkPlayerCollisions = function () {
-    if (sploded) {
-        return;
-    }
     var playerRadius = player.radius / 2;
     // For each collideable rock...
     var i = 0;
@@ -795,8 +829,6 @@ var update = function (ts, dt) {
     if (paused || !gameHasFocus) {
         return;
     }
-    // let drawableRocks: number[][] = [];
-    // let drawablePlayers: number[][] = [];
     collisionRocks = [];
     collisionPlayers = [];
     easel.wipe();
@@ -804,6 +836,7 @@ var update = function (ts, dt) {
     drawBullets(dt);
     if (!sploded) {
         drawPlayer(dt);
+        checkBulletCollisions();
         checkPlayerCollisions();
     }
     else {

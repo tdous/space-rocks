@@ -116,7 +116,7 @@ const randomNeg = () => (Math.random() < 0.5 ? 1 : -1);
 const player = new Player();
 
 // Gen rocks
-for (let i = 0; i < 3; i++) {
+for (let i = 0; i < 6; i++) {
   let vx = (Math.random() * rockBaseVel + 15) * randomNeg();
   let vy = (Math.random() * rockBaseVel + 15) * randomNeg();
   aRocks.push(
@@ -173,12 +173,36 @@ const fireBullet = () => {
   );
 };
 
+// Kill a rock
+const killRock = (i: number) => {
+  if (aRocks[i].gen > 1) {
+    let j = 0;
+    while (j < 2) {
+      aRocks.push(
+        new Rock(
+          aRocks[i].x + Math.random() * aRocks[i].radius / 2 * randomNeg(),
+          aRocks[i].y + Math.random() * aRocks[i].radius / 2 * randomNeg(),
+          aRocks[i].vx + Math.random() * rockBaseVel * randomNeg(),
+          aRocks[i].vy + Math.random() * rockBaseVel * randomNeg(),
+          Math.random() * 100 * randomNeg(),
+          rockRadius,
+          aRocks[i].gen - 1
+        )
+      );
+      j++;
+    }
+  }
+
+  delete aRocks[i];
+  aRocks = aRocks.filter(b => typeof b !== 'undefined');
+};
+
 // --- Draw things ---
 
 // Draw an entity shape at calced location and rotation
 const drawEntity = (
+  index: number,
   entity: Rock | Player,
-  dt: number = 0,
   colliders: number[][]
 ) => {
   let drawable = [];
@@ -261,7 +285,7 @@ const drawEntity = (
       true
     );
 
-    colliders.push(drawable[j]);
+    colliders.push([...drawable[j], index]);
 
     j++;
   }
@@ -284,7 +308,7 @@ const drawRocks = (dt: number = 0) => {
       r.r += 360;
     }
 
-    drawEntity(r, dt, collisionRocks);
+    drawEntity(i, r, collisionRocks);
 
     i++;
   }
@@ -292,10 +316,6 @@ const drawRocks = (dt: number = 0) => {
 
 // Calculate and draw player ship
 const drawPlayer = (dt: number = 0) => {
-  if (sploded) {
-    return;
-  }
-
   player.x = player.x !== 0 ? player.x : easel.w / 2;
   player.y = player.y !== 0 ? player.y : easel.h / 2;
 
@@ -324,7 +344,7 @@ const drawPlayer = (dt: number = 0) => {
   player.x += player.vx * dt;
   player.y += player.vy * dt;
 
-  drawEntity(player, dt, collisionPlayers);
+  drawEntity(0, player, collisionPlayers);
 };
 
 // Draw player explosion
@@ -369,12 +389,32 @@ const drawBullets = (dt: number) => {
   }
 };
 
+// Check for bullet collisions
+const checkBulletCollisions = () => {
+  // For each collideable rock...
+  let i = 0;
+  while (i < collisionRocks.length) {
+    // ...check each bullet
+    let j = 0;
+    while (j < aBullets.length) {
+      // Distance from x-y diffs
+      const dx = collisionRocks[i][0] - aBullets[j].x;
+      const dy = collisionRocks[i][1] - aBullets[j].y;
+      // If distance apart is less than combined radii, collision
+      if (Math.sqrt(dx * dx + dy * dy) < collisionRocks[i][2]) {
+        delete aBullets[j];
+        aBullets = aBullets.filter(b => typeof b !== 'undefined');
+
+        killRock(collisionRocks[i][3]);
+      }
+      j++;
+    }
+    i++;
+  }
+};
+
 // Check for player collisions
 const checkPlayerCollisions = () => {
-  if (sploded) {
-    return;
-  }
-
   let playerRadius = player.radius / 2;
 
   // For each collideable rock...
@@ -411,9 +451,6 @@ const update = (ts: number = 0, dt: number = 0) => {
     return;
   }
 
-  // let drawableRocks: number[][] = [];
-  // let drawablePlayers: number[][] = [];
-
   collisionRocks = [];
   collisionPlayers = [];
   easel.wipe();
@@ -422,6 +459,7 @@ const update = (ts: number = 0, dt: number = 0) => {
   drawBullets(dt);
   if (!sploded) {
     drawPlayer(dt);
+    checkBulletCollisions();
     checkPlayerCollisions();
   } else {
     drawSplosion(dt);
