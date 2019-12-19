@@ -509,6 +509,8 @@ var aRocks = [];
 var aSplodicles = [];
 var drawableRocks = [];
 var drawablePlayers = [];
+var collisionRocks = [];
+var collisionPlayers = [];
 var engine = new anim_loop_engine__WEBPACK_IMPORTED_MODULE_0__["AnimLoopEngine"]();
 var easel = new easel_js__WEBPACK_IMPORTED_MODULE_1__["Easel"]('sr', { tabIndex: 0, focus: true });
 easel.config({
@@ -584,7 +586,7 @@ var randomNeg = function () { return (Math.random() < 0.5 ? 1 : -1); };
 // Gen player
 var player = new _entities_Player__WEBPACK_IMPORTED_MODULE_6__["Player"]();
 // Gen rocks
-for (var i = 0; i < 5; i++) {
+for (var i = 0; i < 3; i++) {
     var vx = (Math.random() * rockBaseVel + 15) * randomNeg();
     var vy = (Math.random() * rockBaseVel + 15) * randomNeg();
     aRocks.push(new _entities_Rock__WEBPACK_IMPORTED_MODULE_7__["Rock"](calcRockSpawnCoord('x'), calcRockSpawnCoord('y'), vx, vy, Math.random() * 100 * randomNeg(), rockRadius));
@@ -614,8 +616,9 @@ var fireBullet = function () {
 };
 // --- Draw things ---
 // Draw an entity shape at calced location and rotation
-var drawEntity = function (entity, dt, drawable) {
+var drawEntity = function (entity, dt, colliders) {
     if (dt === void 0) { dt = 0; }
+    var drawable = [];
     // Screen wrap boundaries
     var inner = genRockInner(entity.radius);
     // Don't accrue large spin angles
@@ -627,63 +630,39 @@ var drawEntity = function (entity, dt, drawable) {
     }
     // Wrap entity at screen edges
     wrapAtEdges(entity);
-    // // x < 0
-    // if (entity.x < 0) {
-    //   entity.x += easel.w;
-    // }
-    // // x > width
-    // else if (entity.x > easel.w) {
-    //   entity.x -= easel.w;
-    // }
-    // // y < 0
-    // if (entity.y < 0) {
-    //   entity.y += easel.h;
-    // }
-    // // y > height
-    // if (entity.y > easel.h) {
-    //   entity.y -= easel.h;
-    // }
     // Add main rock to drawable array
     drawable.push([entity.x, entity.y, entity.radius]);
     // Check for boundary overlap to generate faux-rocks:
     // Top left
     if (entity.x < inner[3] && entity.y < inner[0]) {
-        // console.log('TOP LEFT');
         drawable.push([entity.x, entity.y + easel.h, entity.radius], [entity.x + easel.w, entity.y, entity.radius], [entity.x + easel.w, entity.y + easel.h, entity.radius]);
     }
     // Top right
     else if (entity.x > inner[1] && entity.y < inner[0]) {
-        // console.log('TOP RIGHT');
         drawable.push([entity.x - easel.w, entity.y, entity.radius], [entity.x - easel.w, entity.y + easel.h, entity.radius], [entity.x, entity.y + easel.h, entity.radius]);
     }
     // Bottom right
     else if (entity.x > inner[1] && entity.y > inner[2]) {
-        // console.log('BOTTOM RIGHT');
         drawable.push([entity.x - easel.w, entity.y - easel.h, entity.radius], [entity.x, entity.y - easel.h, entity.radius], [entity.x - easel.w, entity.y, entity.radius]);
     }
     // Bottom left
     else if (entity.x < inner[3] && entity.y > inner[2]) {
-        // console.log('BOTTOM LEFT');
         drawable.push([entity.x, entity.y - easel.h, entity.radius], [entity.x + easel.w, entity.y - easel.h, entity.radius], [entity.x + easel.w, entity.y, entity.radius]);
     }
     // Top
     else if (entity.y < inner[0]) {
-        // console.log('TOP');
         drawable.push([entity.x, entity.y + easel.h, entity.radius]);
     }
     // Right
     else if (entity.x > inner[1]) {
-        // console.log('RIGHT');
         drawable.push([entity.x - easel.w, entity.y, entity.radius]);
     }
     // Bottom
     else if (entity.y > inner[2]) {
-        // console.log('BOTTOM');
         drawable.push([entity.x, entity.y - easel.h, entity.radius]);
     }
     // Left
     else if (entity.x < inner[3]) {
-        // console.log('LEFT');
         drawable.push([entity.x + easel.w, entity.y, entity.radius]);
     }
     // Radius arc for testing
@@ -691,6 +670,7 @@ var drawEntity = function (entity, dt, drawable) {
     var j = 0;
     while (j < drawable.length) {
         Object(easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_3__["line"])(easel.cx, translateShape(rotateShape(entity.getShape(), entity.r), drawable[j]), 's', true);
+        colliders.push(drawable[j]);
         j++;
     }
 };
@@ -710,7 +690,7 @@ var drawRocks = function (dt) {
         else if (r.r < -360) {
             r.r += 360;
         }
-        drawEntity(r, dt, drawableRocks);
+        drawEntity(r, dt, collisionRocks);
         i++;
     }
 };
@@ -743,7 +723,7 @@ var drawPlayer = function (dt) {
     }
     player.x += player.vx * dt;
     player.y += player.vy * dt;
-    drawEntity(player, dt, drawablePlayers);
+    drawEntity(player, dt, collisionPlayers);
 };
 // Draw player explosion
 var drawSplosion = function (dt) {
@@ -753,7 +733,6 @@ var drawSplosion = function (dt) {
         s.x += s.vx * dt;
         s.y += s.vy * dt;
         wrapAtEdges(s);
-        // rect(easel.cx, s.x - 2, s.y + 2, 4, 4, 'f');
         Object(easel_js_lib_draw_arc__WEBPACK_IMPORTED_MODULE_2__["arc"])(easel.cx, s.x, s.y, s.radius, 0, 2 * Math.PI, 'f');
         if (s.x < 0 || s.x > easel.w || s.y < 0 || s.y > easel.h) {
             delete aSplodicles[i];
@@ -782,26 +761,24 @@ var checkPlayerCollisions = function () {
     if (sploded) {
         return;
     }
-    var i = 0;
-    var arr = [];
     var playerRadius = player.radius / 2;
-    while (i < drawableRocks.length) {
+    // For each collideable rock...
+    var i = 0;
+    while (i < collisionRocks.length) {
+        // ...check each collideable player
         var j = 0;
-        while (j < drawablePlayers.length) {
-            var dx = drawableRocks[i][0] - drawablePlayers[j][0];
-            var dy = drawableRocks[i][1] - drawablePlayers[j][1];
-            arr.push(Math.sqrt(dx * dx + dy * dy));
-            if (Math.sqrt(dx * dx + dy * dy) <
-                playerRadius + drawableRocks[i][2] // total radii
-            ) {
-                // player.reset(easel.w / 2, easel.h / 2);
-                // SPLODE!
+        while (j < collisionPlayers.length) {
+            // Distance from x-y diffs
+            var dx = collisionRocks[i][0] - collisionPlayers[j][0];
+            var dy = collisionRocks[i][1] - collisionPlayers[j][1];
+            // If distance apart is less than combined radii, collision
+            if (Math.sqrt(dx * dx + dy * dy) < playerRadius + collisionRocks[i][2]) {
                 sploded = true;
                 player.thrust = false;
                 player.reverse = false;
                 fired = false;
-                j = drawablePlayers.length;
-                i = drawableRocks.length;
+                j = collisionPlayers.length;
+                i = collisionRocks.length;
             }
             j++;
         }
@@ -810,7 +787,6 @@ var checkPlayerCollisions = function () {
     if (sploded) {
         genSplosion();
     }
-    // console.log(arr);
 };
 // Call updates and redraws for all entities
 var update = function (ts, dt) {
@@ -819,8 +795,10 @@ var update = function (ts, dt) {
     if (paused || !gameHasFocus) {
         return;
     }
-    drawableRocks = [];
-    drawablePlayers = [];
+    // let drawableRocks: number[][] = [];
+    // let drawablePlayers: number[][] = [];
+    collisionRocks = [];
+    collisionPlayers = [];
     easel.wipe();
     drawRocks(dt);
     drawBullets(dt);
@@ -836,12 +814,10 @@ var update = function (ts, dt) {
 engine.addTask(update);
 var start = function () {
     paused = false;
-    console.log('START');
     engine.start();
 };
 var stop = function () {
     paused = true;
-    console.log('STOP');
     engine.stop();
 };
 // 37, 38, 39, left up, right
@@ -895,12 +871,10 @@ easel.cv.onkeyup = function (e) {
 // FOCUS/BLUR
 easel.cv.onblur = function () {
     gameHasFocus = false;
-    console.log('BLUR');
     stop();
 };
 easel.cv.onfocus = function () {
     gameHasFocus = true;
-    console.log('FOCUS');
     start();
 };
 start();

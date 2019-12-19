@@ -28,6 +28,8 @@ let aRocks: Rock[] = [];
 let aSplodicles: Splodicle[] = [];
 let drawableRocks: number[][] = [];
 let drawablePlayers: number[][] = [];
+let collisionRocks: number[][] = [];
+let collisionPlayers: number[][] = [];
 
 const engine = new AnimLoopEngine();
 const easel = new Easel('sr', { tabIndex: 0, focus: true });
@@ -114,7 +116,7 @@ const randomNeg = () => (Math.random() < 0.5 ? 1 : -1);
 const player = new Player();
 
 // Gen rocks
-for (let i = 0; i < 5; i++) {
+for (let i = 0; i < 3; i++) {
   let vx = (Math.random() * rockBaseVel + 15) * randomNeg();
   let vy = (Math.random() * rockBaseVel + 15) * randomNeg();
   aRocks.push(
@@ -177,8 +179,10 @@ const fireBullet = () => {
 const drawEntity = (
   entity: Rock | Player,
   dt: number = 0,
-  drawable: number[][]
+  colliders: number[][]
 ) => {
+  let drawable = [];
+
   // Screen wrap boundaries
   const inner = genRockInner(entity.radius);
 
@@ -191,23 +195,6 @@ const drawEntity = (
 
   // Wrap entity at screen edges
   wrapAtEdges(entity);
-  // // x < 0
-  // if (entity.x < 0) {
-  //   entity.x += easel.w;
-  // }
-  // // x > width
-  // else if (entity.x > easel.w) {
-  //   entity.x -= easel.w;
-  // }
-
-  // // y < 0
-  // if (entity.y < 0) {
-  //   entity.y += easel.h;
-  // }
-  // // y > height
-  // if (entity.y > easel.h) {
-  //   entity.y -= easel.h;
-  // }
 
   // Add main rock to drawable array
   drawable.push([entity.x, entity.y, entity.radius]);
@@ -215,7 +202,6 @@ const drawEntity = (
   // Check for boundary overlap to generate faux-rocks:
   // Top left
   if (entity.x < inner[3] && entity.y < inner[0]) {
-    // console.log('TOP LEFT');
     drawable.push(
       [entity.x, entity.y + easel.h, entity.radius],
       [entity.x + easel.w, entity.y, entity.radius],
@@ -224,7 +210,6 @@ const drawEntity = (
   }
   // Top right
   else if (entity.x > inner[1] && entity.y < inner[0]) {
-    // console.log('TOP RIGHT');
     drawable.push(
       [entity.x - easel.w, entity.y, entity.radius],
       [entity.x - easel.w, entity.y + easel.h, entity.radius],
@@ -233,7 +218,6 @@ const drawEntity = (
   }
   // Bottom right
   else if (entity.x > inner[1] && entity.y > inner[2]) {
-    // console.log('BOTTOM RIGHT');
     drawable.push(
       [entity.x - easel.w, entity.y - easel.h, entity.radius],
       [entity.x, entity.y - easel.h, entity.radius],
@@ -242,7 +226,6 @@ const drawEntity = (
   }
   // Bottom left
   else if (entity.x < inner[3] && entity.y > inner[2]) {
-    // console.log('BOTTOM LEFT');
     drawable.push(
       [entity.x, entity.y - easel.h, entity.radius],
       [entity.x + easel.w, entity.y - easel.h, entity.radius],
@@ -251,22 +234,18 @@ const drawEntity = (
   }
   // Top
   else if (entity.y < inner[0]) {
-    // console.log('TOP');
     drawable.push([entity.x, entity.y + easel.h, entity.radius]);
   }
   // Right
   else if (entity.x > inner[1]) {
-    // console.log('RIGHT');
     drawable.push([entity.x - easel.w, entity.y, entity.radius]);
   }
   // Bottom
   else if (entity.y > inner[2]) {
-    // console.log('BOTTOM');
     drawable.push([entity.x, entity.y - easel.h, entity.radius]);
   }
   // Left
   else if (entity.x < inner[3]) {
-    // console.log('LEFT');
     drawable.push([entity.x + easel.w, entity.y, entity.radius]);
   }
 
@@ -281,6 +260,8 @@ const drawEntity = (
       's',
       true
     );
+
+    colliders.push(drawable[j]);
 
     j++;
   }
@@ -303,7 +284,7 @@ const drawRocks = (dt: number = 0) => {
       r.r += 360;
     }
 
-    drawEntity(r, dt, drawableRocks);
+    drawEntity(r, dt, collisionRocks);
 
     i++;
   }
@@ -343,7 +324,7 @@ const drawPlayer = (dt: number = 0) => {
   player.x += player.vx * dt;
   player.y += player.vy * dt;
 
-  drawEntity(player, dt, drawablePlayers);
+  drawEntity(player, dt, collisionPlayers);
 };
 
 // Draw player explosion
@@ -357,7 +338,6 @@ const drawSplosion = (dt: number) => {
 
     wrapAtEdges(s);
 
-    // rect(easel.cx, s.x - 2, s.y + 2, 4, 4, 'f');
     arc(easel.cx, s.x, s.y, s.radius, 0, 2 * Math.PI, 'f');
 
     if (s.x < 0 || s.x > easel.w || s.y < 0 || s.y > easel.h) {
@@ -395,27 +375,25 @@ const checkPlayerCollisions = () => {
     return;
   }
 
-  let i = 0;
-  let arr = [];
   let playerRadius = player.radius / 2;
-  while (i < drawableRocks.length) {
+
+  // For each collideable rock...
+  let i = 0;
+  while (i < collisionRocks.length) {
+    // ...check each collideable player
     let j = 0;
-    while (j < drawablePlayers.length) {
-      const dx = drawableRocks[i][0] - drawablePlayers[j][0];
-      const dy = drawableRocks[i][1] - drawablePlayers[j][1];
-      arr.push(Math.sqrt(dx * dx + dy * dy));
-      if (
-        Math.sqrt(dx * dx + dy * dy) <
-        playerRadius + drawableRocks[i][2] // total radii
-      ) {
-        // player.reset(easel.w / 2, easel.h / 2);
-        // SPLODE!
+    while (j < collisionPlayers.length) {
+      // Distance from x-y diffs
+      const dx = collisionRocks[i][0] - collisionPlayers[j][0];
+      const dy = collisionRocks[i][1] - collisionPlayers[j][1];
+      // If distance apart is less than combined radii, collision
+      if (Math.sqrt(dx * dx + dy * dy) < playerRadius + collisionRocks[i][2]) {
         sploded = true;
         player.thrust = false;
         player.reverse = false;
         fired = false;
-        j = drawablePlayers.length;
-        i = drawableRocks.length;
+        j = collisionPlayers.length;
+        i = collisionRocks.length;
       }
       j++;
     }
@@ -425,7 +403,6 @@ const checkPlayerCollisions = () => {
   if (sploded) {
     genSplosion();
   }
-  // console.log(arr);
 };
 
 // Call updates and redraws for all entities
@@ -434,8 +411,11 @@ const update = (ts: number = 0, dt: number = 0) => {
     return;
   }
 
-  drawableRocks = [];
-  drawablePlayers = [];
+  // let drawableRocks: number[][] = [];
+  // let drawablePlayers: number[][] = [];
+
+  collisionRocks = [];
+  collisionPlayers = [];
   easel.wipe();
 
   drawRocks(dt);
@@ -457,13 +437,11 @@ engine.addTask(update);
 
 const start = () => {
   paused = false;
-  console.log('START');
   engine.start();
 };
 
 const stop = () => {
   paused = true;
-  console.log('STOP');
   engine.stop();
 };
 
@@ -528,13 +506,11 @@ easel.cv.onkeyup = (e: KeyboardEvent) => {
 // FOCUS/BLUR
 easel.cv.onblur = () => {
   gameHasFocus = false;
-  console.log('BLUR');
   stop();
 };
 
 easel.cv.onfocus = () => {
   gameHasFocus = true;
-  console.log('FOCUS');
   start();
 };
 
