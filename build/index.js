@@ -584,7 +584,7 @@ var randomNeg = function () { return (Math.random() < 0.5 ? 1 : -1); };
 // Gen player
 var player = new _entities_Player__WEBPACK_IMPORTED_MODULE_6__["Player"]();
 // Gen rocks
-for (var i = 0; i < 1; i++) {
+for (var i = 0; i < 5; i++) {
     var vx = (Math.random() * rockBaseVel + 15) * randomNeg();
     var vy = (Math.random() * rockBaseVel + 15) * randomNeg();
     aRocks.push(new _entities_Rock__WEBPACK_IMPORTED_MODULE_7__["Rock"](calcRockSpawnCoord('x'), calcRockSpawnCoord('y'), vx, vy, Math.random() * 100 * randomNeg(), rockRadius));
