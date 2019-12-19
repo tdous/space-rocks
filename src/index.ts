@@ -114,7 +114,7 @@ const randomNeg = () => (Math.random() < 0.5 ? 1 : -1);
 const player = new Player();
 
 // Gen rocks
-for (let i = 0; i < 1; i++) {
+for (let i = 0; i < 5; i++) {
   let vx = (Math.random() * rockBaseVel + 15) * randomNeg();
   let vy = (Math.random() * rockBaseVel + 15) * randomNeg();
   aRocks.push(
