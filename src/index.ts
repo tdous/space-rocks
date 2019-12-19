@@ -14,11 +14,20 @@ import { degreesToRadians, radiansToDegrees } from './utils/math';
 import { Bullet } from './entities/Bullet';
 import { Player } from './entities/Player';
 import { Rock } from './entities/Rock';
+import { Splodicle } from './entities/Splodicle';
 
 let initNumRocks = 4;
+let fired = false;
 let gameHasFocus = true;
 let paused = false;
-let fired = false;
+let sploded = false;
+
+// Arrays of shit
+let aBullets: Bullet[] = [];
+let aRocks: Rock[] = [];
+let aSplodicles: Splodicle[] = [];
+let drawableRocks: number[][] = [];
+let drawablePlayers: number[][] = [];
 
 const engine = new AnimLoopEngine();
 const easel = new Easel('sr', { tabIndex: 0, focus: true });
@@ -32,7 +41,7 @@ easel.config({
 });
 
 const scalingBase = easel.w > easel.h ? easel.w : easel.h;
-const rockRadius = scalingBase / 15;
+const rockRadius = scalingBase / 45;
 const rockBaseVel = scalingBase / 15;
 
 const calcRockSpawnCoord = (axis: string) => {
@@ -76,17 +85,36 @@ const translateShape = (shape: number[][], matrix: number[]) => {
   return tShape;
 };
 
+const wrapAtEdges = (entity: Rock | Player | Splodicle) => {
+  // Wrap main rock at screen edges
+  // x < 0
+  if (entity.x < 0) {
+    entity.x += easel.w;
+  }
+  // x > width
+  else if (entity.x > easel.w) {
+    entity.x -= easel.w;
+  }
+
+  // y < 0
+  if (entity.y < 0) {
+    entity.y += easel.h;
+  }
+  // y > height
+  if (entity.y > easel.h) {
+    entity.y -= easel.h;
+  }
+};
+
 const randomNeg = () => (Math.random() < 0.5 ? 1 : -1);
 
 // GENERATE SHIT
-let aBullets: Bullet[] = [];
 
 // Gen player
 const player = new Player();
 
 // Gen rocks
-let aRocks: Rock[] = [];
-for (let i = 0; i < 4; i++) {
+for (let i = 0; i < 1; i++) {
   let vx = (Math.random() * rockBaseVel + 15) * randomNeg();
   let vy = (Math.random() * rockBaseVel + 15) * randomNeg();
   aRocks.push(
@@ -106,10 +134,51 @@ const genRockInner = (radius: number) => {
   return [0 + radius, easel.w - radius, easel.h - radius, 0 + radius];
 };
 
-// Draw an entity shape at calced location and rotation
-const drawEntity = (entity: Rock | Player, dt: number = 0, fill?: boolean) => {
-  let drawable: number[][] = [];
+// Generate player explosion
+const genSplosion = () => {
+  let i = 0;
+  while (i < 20) {
+    aSplodicles.push(
+      new Splodicle(
+        player.x + Math.random() * 10 * randomNeg(),
+        player.y + Math.random() * 10 * randomNeg(),
+        player.vx / 2 + Math.random() * 50 * randomNeg(),
+        player.vy / 2 + Math.random() * 50 * randomNeg(),
+        Math.random() * 2.5 + 0.5
+      )
+    );
+    i++;
+  }
 
+  // Start timer to reset after explosion
+  setTimeout(() => {
+    aSplodicles = [];
+    sploded = false;
+    player.reset(easel.w / 2, easel.h / 2);
+  }, 3000);
+};
+
+// Fire a bullet
+const fireBullet = () => {
+  let rad = degreesToRadians(player.r);
+  aBullets.push(
+    new Bullet(
+      player.x + Math.sin(rad) * 14,
+      player.y + -Math.cos(rad) * 14,
+      player.vx + Math.sin(rad) * 350,
+      player.vy + -Math.cos(rad) * 350
+    )
+  );
+};
+
+// --- Draw things ---
+
+// Draw an entity shape at calced location and rotation
+const drawEntity = (
+  entity: Rock | Player,
+  dt: number = 0,
+  drawable: number[][]
+) => {
   // Screen wrap boundaries
   const inner = genRockInner(entity.radius);
 
@@ -120,84 +189,96 @@ const drawEntity = (entity: Rock | Player, dt: number = 0, fill?: boolean) => {
     entity.r += 360;
   }
 
-  // Wrap main rock at screen edges
-  // x < 0
-  if (entity.x < 0) {
-    entity.x += easel.w;
-  }
-  // x > width
-  else if (entity.x > easel.w) {
-    entity.x -= easel.w;
-  }
+  // Wrap entity at screen edges
+  wrapAtEdges(entity);
+  // // x < 0
+  // if (entity.x < 0) {
+  //   entity.x += easel.w;
+  // }
+  // // x > width
+  // else if (entity.x > easel.w) {
+  //   entity.x -= easel.w;
+  // }
 
-  // y < 0
-  if (entity.y < 0) {
-    entity.y += easel.h;
-  }
-  // y > height
-  if (entity.y > easel.h) {
-    entity.y -= easel.h;
-  }
+  // // y < 0
+  // if (entity.y < 0) {
+  //   entity.y += easel.h;
+  // }
+  // // y > height
+  // if (entity.y > easel.h) {
+  //   entity.y -= easel.h;
+  // }
 
   // Add main rock to drawable array
-  drawable.push([entity.x, entity.y]);
+  drawable.push([entity.x, entity.y, entity.radius]);
 
   // Check for boundary overlap to generate faux-rocks:
   // Top left
   if (entity.x < inner[3] && entity.y < inner[0]) {
+    // console.log('TOP LEFT');
     drawable.push(
-      [entity.x, entity.y + easel.h],
-      [entity.x + easel.w, entity.y],
-      [entity.x + easel.w, entity.y + easel.h]
+      [entity.x, entity.y + easel.h, entity.radius],
+      [entity.x + easel.w, entity.y, entity.radius],
+      [entity.x + easel.w, entity.y + easel.h, entity.radius]
     );
   }
   // Top right
   else if (entity.x > inner[1] && entity.y < inner[0]) {
+    // console.log('TOP RIGHT');
     drawable.push(
-      [entity.x - easel.w, entity.y],
-      [entity.x - easel.w, entity.y + easel.h],
-      [entity.x, entity.y + easel.h]
+      [entity.x - easel.w, entity.y, entity.radius],
+      [entity.x - easel.w, entity.y + easel.h, entity.radius],
+      [entity.x, entity.y + easel.h, entity.radius]
     );
   }
   // Bottom right
-  else if (entity.x > inner[1] && entity.y < inner[2]) {
+  else if (entity.x > inner[1] && entity.y > inner[2]) {
+    // console.log('BOTTOM RIGHT');
     drawable.push(
-      [entity.x - easel.w, entity.y - easel.h],
-      [entity.x, entity.y - easel.h],
-      [entity.x - easel.w, entity.y]
+      [entity.x - easel.w, entity.y - easel.h, entity.radius],
+      [entity.x, entity.y - easel.h, entity.radius],
+      [entity.x - easel.w, entity.y, entity.radius]
     );
   }
   // Bottom left
   else if (entity.x < inner[3] && entity.y > inner[2]) {
+    // console.log('BOTTOM LEFT');
     drawable.push(
-      [entity.x, entity.y - easel.h],
-      [entity.x + easel.w, entity.y - easel.h],
-      [entity.x + easel.w, entity.y]
+      [entity.x, entity.y - easel.h, entity.radius],
+      [entity.x + easel.w, entity.y - easel.h, entity.radius],
+      [entity.x + easel.w, entity.y, entity.radius]
     );
   }
   // Top
   else if (entity.y < inner[0]) {
-    drawable.push([entity.x, entity.y + easel.h]);
+    // console.log('TOP');
+    drawable.push([entity.x, entity.y + easel.h, entity.radius]);
   }
   // Right
   else if (entity.x > inner[1]) {
-    drawable.push([entity.x - easel.w, entity.y]);
+    // console.log('RIGHT');
+    drawable.push([entity.x - easel.w, entity.y, entity.radius]);
   }
   // Bottom
   else if (entity.y > inner[2]) {
-    drawable.push([entity.x, entity.y - easel.h]);
+    // console.log('BOTTOM');
+    drawable.push([entity.x, entity.y - easel.h, entity.radius]);
   }
   // Left
   else if (entity.x < inner[3]) {
-    drawable.push([entity.x + easel.w, entity.y]);
+    // console.log('LEFT');
+    drawable.push([entity.x + easel.w, entity.y, entity.radius]);
   }
+
+  // Radius arc for testing
+  // arc(easel.cx, entity.x, entity.y, entity.radius, 0, 2 * Math.PI, 's');
 
   let j = 0;
   while (j < drawable.length) {
     line(
       easel.cx,
       translateShape(rotateShape(entity.getShape(), entity.r), drawable[j]),
-      fill ? 'fs' : 's',
+      's',
       true
     );
 
@@ -222,7 +303,7 @@ const drawRocks = (dt: number = 0) => {
       r.r += 360;
     }
 
-    drawEntity(r, dt);
+    drawEntity(r, dt, drawableRocks);
 
     i++;
   }
@@ -230,6 +311,10 @@ const drawRocks = (dt: number = 0) => {
 
 // Calculate and draw player ship
 const drawPlayer = (dt: number = 0) => {
+  if (sploded) {
+    return;
+  }
+
   player.x = player.x !== 0 ? player.x : easel.w / 2;
   player.y = player.y !== 0 ? player.y : easel.h / 2;
 
@@ -258,20 +343,30 @@ const drawPlayer = (dt: number = 0) => {
   player.x += player.vx * dt;
   player.y += player.vy * dt;
 
-  drawEntity(player, dt);
+  drawEntity(player, dt, drawablePlayers);
 };
 
-// Fire a bullet
-const fireBullet = () => {
-  let rad = degreesToRadians(player.r);
-  aBullets.push(
-    new Bullet(
-      player.x + Math.sin(rad) * 14,
-      player.y + -Math.cos(rad) * 14,
-      player.vx + Math.sin(rad) * 350,
-      player.vy + -Math.cos(rad) * 350
-    )
-  );
+// Draw player explosion
+const drawSplosion = (dt: number) => {
+  let i = 0;
+  while (i < aSplodicles.length) {
+    let s = aSplodicles[i];
+
+    s.x += s.vx * dt;
+    s.y += s.vy * dt;
+
+    wrapAtEdges(s);
+
+    // rect(easel.cx, s.x - 2, s.y + 2, 4, 4, 'f');
+    arc(easel.cx, s.x, s.y, s.radius, 0, 2 * Math.PI, 'f');
+
+    if (s.x < 0 || s.x > easel.w || s.y < 0 || s.y > easel.h) {
+      delete aSplodicles[i];
+      aSplodicles = aSplodicles.filter(b => typeof b !== 'undefined');
+    }
+
+    i++;
+  }
 };
 
 // Draw bullets
@@ -294,7 +389,44 @@ const drawBullets = (dt: number) => {
   }
 };
 
-// Check for player
+// Check for player collisions
+const checkPlayerCollisions = () => {
+  if (sploded) {
+    return;
+  }
+
+  let i = 0;
+  let arr = [];
+  let playerRadius = player.radius / 2;
+  while (i < drawableRocks.length) {
+    let j = 0;
+    while (j < drawablePlayers.length) {
+      const dx = drawableRocks[i][0] - drawablePlayers[j][0];
+      const dy = drawableRocks[i][1] - drawablePlayers[j][1];
+      arr.push(Math.sqrt(dx * dx + dy * dy));
+      if (
+        Math.sqrt(dx * dx + dy * dy) <
+        playerRadius + drawableRocks[i][2] // total radii
+      ) {
+        // player.reset(easel.w / 2, easel.h / 2);
+        // SPLODE!
+        sploded = true;
+        player.thrust = false;
+        player.reverse = false;
+        fired = false;
+        j = drawablePlayers.length;
+        i = drawableRocks.length;
+      }
+      j++;
+    }
+    i++;
+  }
+
+  if (sploded) {
+    genSplosion();
+  }
+  // console.log(arr);
+};
 
 // Call updates and redraws for all entities
 const update = (ts: number = 0, dt: number = 0) => {
@@ -302,11 +434,18 @@ const update = (ts: number = 0, dt: number = 0) => {
     return;
   }
 
+  drawableRocks = [];
+  drawablePlayers = [];
   easel.wipe();
+
   drawRocks(dt);
-  drawPlayer(dt);
   drawBullets(dt);
-  // checkPlayerCollisions();
+  if (!sploded) {
+    drawPlayer(dt);
+    checkPlayerCollisions();
+  } else {
+    drawSplosion(dt);
+  }
 
   easel.cx.fillText(
     'Space Rocks: Space Rocks!',
@@ -330,6 +469,10 @@ const stop = () => {
 
 // 37, 38, 39, left up, right
 easel.cv.onkeydown = (e: KeyboardEvent) => {
+  if (sploded) {
+    return;
+  }
+
   switch (e.keyCode) {
     case 38: // Up
       player.thrust = true;
@@ -358,6 +501,10 @@ easel.cv.onkeydown = (e: KeyboardEvent) => {
   }
 };
 easel.cv.onkeyup = (e: KeyboardEvent) => {
+  if (sploded) {
+    return;
+  }
+
   switch (e.keyCode) {
     case 38: // Up
       player.thrust = false;

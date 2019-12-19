@@ -3,7 +3,7 @@ import { Mover } from './Mover';
 export class Rock implements Mover {
   s: number[][] = [];
   r = 0;
-  gen = 1; // Generation - 1 = 1st, 2 = 2nd, 3 = 3rd and last
+  gen = 3; // Generation - 3 = 1st, 2 = 2nd, 1 = 3rd and last
 
   constructor(
     public x = 0,
@@ -17,6 +17,8 @@ export class Rock implements Mover {
     if (gen) {
       this.gen = gen;
     }
+
+    this.radius = radius * this.gen;
   }
 
   getShape(): number[][] {
@@ -29,8 +31,8 @@ export class Rock implements Mover {
 
     for (let i = 0; i < div; i++) {
       this.s.push([
-        Math.sin(i * angle) * (Math.random() * 10 + this.radius - 5),
-        Math.cos(i * angle) * (Math.random() * 10 + this.radius - 5)
+        Math.sin(i * angle) * (Math.random() * 10 + this.radius),
+        Math.cos(i * angle) * (Math.random() * 10 + this.radius)
       ]);
     }
 

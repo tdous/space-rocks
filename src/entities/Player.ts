@@ -35,4 +35,15 @@ export class Player implements Mover {
           [-10, 10]
         ];
   }
+
+  reset(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+    this.r = 0;
+    this.vx = 0;
+    this.vy = 0;
+    this.tx = 0;
+    this.ty = 0;
+    this.va = 0;
+  }
 }

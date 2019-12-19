@@ -366,6 +366,16 @@ var Player = /** @class */ (function () {
                 [-10, 10]
             ];
     };
+    Player.prototype.reset = function (x, y) {
+        this.x = x;
+        this.y = y;
+        this.r = 0;
+        this.vx = 0;
+        this.vy = 0;
+        this.tx = 0;
+        this.ty = 0;
+        this.va = 0;
+    };
     return Player;
 }());
 
@@ -399,10 +409,11 @@ var Rock = /** @class */ (function () {
         this.radius = radius;
         this.s = [];
         this.r = 0;
-        this.gen = 1; // Generation - 1 = 1st, 2 = 2nd, 3 = 3rd and last
+        this.gen = 3; // Generation - 3 = 1st, 2 = 2nd, 1 = 3rd and last
         if (gen) {
             this.gen = gen;
         }
+        this.radius = radius * this.gen;
     }
     Rock.prototype.getShape = function () {
         if (this.s.length > 0) {
@@ -412,13 +423,43 @@ var Rock = /** @class */ (function () {
         var angle = (2 * Math.PI) / div;
         for (var i = 0; i < div; i++) {
             this.s.push([
-                Math.sin(i * angle) * (Math.random() * 10 + this.radius - 5),
-                Math.cos(i * angle) * (Math.random() * 10 + this.radius - 5)
+                Math.sin(i * angle) * (Math.random() * 10 + this.radius),
+                Math.cos(i * angle) * (Math.random() * 10 + this.radius)
             ]);
         }
         return this.s;
     };
     return Rock;
+}());
+
+
+
+/***/ }),
+
+/***/ "./src/entities/Splodicle.ts":
+/*!***********************************!*\
+  !*** ./src/entities/Splodicle.ts ***!
+  \***********************************/
+/*! exports provided: Splodicle */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Splodicle", function() { return Splodicle; });
+var Splodicle = /** @class */ (function () {
+    function Splodicle(x, y, vx, vy, radius) {
+        if (x === void 0) { x = 0; }
+        if (y === void 0) { y = 0; }
+        if (vx === void 0) { vx = 0; }
+        if (vy === void 0) { vy = 0; }
+        if (radius === void 0) { radius = 0; }
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.radius = radius;
+    }
+    return Splodicle;
 }());
 
 
@@ -442,6 +483,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _entities_Bullet__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./entities/Bullet */ "./src/entities/Bullet.ts");
 /* harmony import */ var _entities_Player__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./entities/Player */ "./src/entities/Player.ts");
 /* harmony import */ var _entities_Rock__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./entities/Rock */ "./src/entities/Rock.ts");
+/* harmony import */ var _entities_Splodicle__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./entities/Splodicle */ "./src/entities/Splodicle.ts");
 
 // import { AnimLoopEngine } from '../../anim-loop-engine/lib/index';
 // import { Easel } from '../../easel-js/lib/index';
@@ -455,10 +497,18 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 var initNumRocks = 4;
+var fired = false;
 var gameHasFocus = true;
 var paused = false;
-var fired = false;
+var sploded = false;
+// Arrays of shit
+var aBullets = [];
+var aRocks = [];
+var aSplodicles = [];
+var drawableRocks = [];
+var drawablePlayers = [];
 var engine = new anim_loop_engine__WEBPACK_IMPORTED_MODULE_0__["AnimLoopEngine"]();
 var easel = new easel_js__WEBPACK_IMPORTED_MODULE_1__["Easel"]('sr', { tabIndex: 0, focus: true });
 easel.config({
@@ -470,7 +520,7 @@ easel.config({
     textBaseline: 'middle'
 });
 var scalingBase = easel.w > easel.h ? easel.w : easel.h;
-var rockRadius = scalingBase / 15;
+var rockRadius = scalingBase / 45;
 var rockBaseVel = scalingBase / 15;
 var calcRockSpawnCoord = function (axis) {
     if (axis === 'x') {
@@ -510,35 +560,7 @@ var translateShape = function (shape, matrix) {
     }
     return tShape;
 };
-var randomNeg = function () { return (Math.random() < 0.5 ? 1 : -1); };
-// GENERATE SHIT
-var aBullets = [];
-// Gen player
-var player = new _entities_Player__WEBPACK_IMPORTED_MODULE_6__["Player"]();
-// Gen rocks
-var aRocks = [];
-for (var i = 0; i < 4; i++) {
-    var vx = (Math.random() * rockBaseVel + 15) * randomNeg();
-    var vy = (Math.random() * rockBaseVel + 15) * randomNeg();
-    aRocks.push(new _entities_Rock__WEBPACK_IMPORTED_MODULE_7__["Rock"](calcRockSpawnCoord('x'), calcRockSpawnCoord('y'), vx, vy, Math.random() * 100 * randomNeg(), rockRadius));
-}
-// Gen rock's screen boundaries
-var genRockInner = function (radius) {
-    return [0 + radius, easel.w - radius, easel.h - radius, 0 + radius];
-};
-// Draw an entity shape at calced location and rotation
-var drawEntity = function (entity, dt, fill) {
-    if (dt === void 0) { dt = 0; }
-    var drawable = [];
-    // Screen wrap boundaries
-    var inner = genRockInner(entity.radius);
-    // Don't accrue large spin angles
-    if (entity.r > 360) {
-        entity.r -= 360;
-    }
-    else if (entity.r < -360) {
-        entity.r += 360;
-    }
+var wrapAtEdges = function (entity) {
     // Wrap main rock at screen edges
     // x < 0
     if (entity.x < 0) {
@@ -556,44 +578,119 @@ var drawEntity = function (entity, dt, fill) {
     if (entity.y > easel.h) {
         entity.y -= easel.h;
     }
+};
+var randomNeg = function () { return (Math.random() < 0.5 ? 1 : -1); };
+// GENERATE SHIT
+// Gen player
+var player = new _entities_Player__WEBPACK_IMPORTED_MODULE_6__["Player"]();
+// Gen rocks
+for (var i = 0; i < 1; i++) {
+    var vx = (Math.random() * rockBaseVel + 15) * randomNeg();
+    var vy = (Math.random() * rockBaseVel + 15) * randomNeg();
+    aRocks.push(new _entities_Rock__WEBPACK_IMPORTED_MODULE_7__["Rock"](calcRockSpawnCoord('x'), calcRockSpawnCoord('y'), vx, vy, Math.random() * 100 * randomNeg(), rockRadius));
+}
+// Gen rock's screen boundaries
+var genRockInner = function (radius) {
+    return [0 + radius, easel.w - radius, easel.h - radius, 0 + radius];
+};
+// Generate player explosion
+var genSplosion = function () {
+    var i = 0;
+    while (i < 20) {
+        aSplodicles.push(new _entities_Splodicle__WEBPACK_IMPORTED_MODULE_8__["Splodicle"](player.x + Math.random() * 10 * randomNeg(), player.y + Math.random() * 10 * randomNeg(), player.vx / 2 + Math.random() * 50 * randomNeg(), player.vy / 2 + Math.random() * 50 * randomNeg(), Math.random() * 2.5 + 0.5));
+        i++;
+    }
+    // Start timer to reset after explosion
+    setTimeout(function () {
+        aSplodicles = [];
+        sploded = false;
+        player.reset(easel.w / 2, easel.h / 2);
+    }, 3000);
+};
+// Fire a bullet
+var fireBullet = function () {
+    var rad = Object(_utils_math__WEBPACK_IMPORTED_MODULE_4__["degreesToRadians"])(player.r);
+    aBullets.push(new _entities_Bullet__WEBPACK_IMPORTED_MODULE_5__["Bullet"](player.x + Math.sin(rad) * 14, player.y + -Math.cos(rad) * 14, player.vx + Math.sin(rad) * 350, player.vy + -Math.cos(rad) * 350));
+};
+// --- Draw things ---
+// Draw an entity shape at calced location and rotation
+var drawEntity = function (entity, dt, drawable) {
+    if (dt === void 0) { dt = 0; }
+    // Screen wrap boundaries
+    var inner = genRockInner(entity.radius);
+    // Don't accrue large spin angles
+    if (entity.r > 360) {
+        entity.r -= 360;
+    }
+    else if (entity.r < -360) {
+        entity.r += 360;
+    }
+    // Wrap entity at screen edges
+    wrapAtEdges(entity);
+    // // x < 0
+    // if (entity.x < 0) {
+    //   entity.x += easel.w;
+    // }
+    // // x > width
+    // else if (entity.x > easel.w) {
+    //   entity.x -= easel.w;
+    // }
+    // // y < 0
+    // if (entity.y < 0) {
+    //   entity.y += easel.h;
+    // }
+    // // y > height
+    // if (entity.y > easel.h) {
+    //   entity.y -= easel.h;
+    // }
     // Add main rock to drawable array
-    drawable.push([entity.x, entity.y]);
+    drawable.push([entity.x, entity.y, entity.radius]);
     // Check for boundary overlap to generate faux-rocks:
     // Top left
     if (entity.x < inner[3] && entity.y < inner[0]) {
-        drawable.push([entity.x, entity.y + easel.h], [entity.x + easel.w, entity.y], [entity.x + easel.w, entity.y + easel.h]);
+        // console.log('TOP LEFT');
+        drawable.push([entity.x, entity.y + easel.h, entity.radius], [entity.x + easel.w, entity.y, entity.radius], [entity.x + easel.w, entity.y + easel.h, entity.radius]);
     }
     // Top right
     else if (entity.x > inner[1] && entity.y < inner[0]) {
-        drawable.push([entity.x - easel.w, entity.y], [entity.x - easel.w, entity.y + easel.h], [entity.x, entity.y + easel.h]);
+        // console.log('TOP RIGHT');
+        drawable.push([entity.x - easel.w, entity.y, entity.radius], [entity.x - easel.w, entity.y + easel.h, entity.radius], [entity.x, entity.y + easel.h, entity.radius]);
     }
     // Bottom right
-    else if (entity.x > inner[1] && entity.y < inner[2]) {
-        drawable.push([entity.x - easel.w, entity.y - easel.h], [entity.x, entity.y - easel.h], [entity.x - easel.w, entity.y]);
+    else if (entity.x > inner[1] && entity.y > inner[2]) {
+        // console.log('BOTTOM RIGHT');
+        drawable.push([entity.x - easel.w, entity.y - easel.h, entity.radius], [entity.x, entity.y - easel.h, entity.radius], [entity.x - easel.w, entity.y, entity.radius]);
     }
     // Bottom left
     else if (entity.x < inner[3] && entity.y > inner[2]) {
-        drawable.push([entity.x, entity.y - easel.h], [entity.x + easel.w, entity.y - easel.h], [entity.x + easel.w, entity.y]);
+        // console.log('BOTTOM LEFT');
+        drawable.push([entity.x, entity.y - easel.h, entity.radius], [entity.x + easel.w, entity.y - easel.h, entity.radius], [entity.x + easel.w, entity.y, entity.radius]);
     }
     // Top
     else if (entity.y < inner[0]) {
-        drawable.push([entity.x, entity.y + easel.h]);
+        // console.log('TOP');
+        drawable.push([entity.x, entity.y + easel.h, entity.radius]);
     }
     // Right
     else if (entity.x > inner[1]) {
-        drawable.push([entity.x - easel.w, entity.y]);
+        // console.log('RIGHT');
+        drawable.push([entity.x - easel.w, entity.y, entity.radius]);
     }
     // Bottom
     else if (entity.y > inner[2]) {
-        drawable.push([entity.x, entity.y - easel.h]);
+        // console.log('BOTTOM');
+        drawable.push([entity.x, entity.y - easel.h, entity.radius]);
     }
     // Left
     else if (entity.x < inner[3]) {
-        drawable.push([entity.x + easel.w, entity.y]);
+        // console.log('LEFT');
+        drawable.push([entity.x + easel.w, entity.y, entity.radius]);
     }
+    // Radius arc for testing
+    // arc(easel.cx, entity.x, entity.y, entity.radius, 0, 2 * Math.PI, 's');
     var j = 0;
     while (j < drawable.length) {
-        Object(easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_3__["line"])(easel.cx, translateShape(rotateShape(entity.getShape(), entity.r), drawable[j]), fill ? 'fs' : 's', true);
+        Object(easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_3__["line"])(easel.cx, translateShape(rotateShape(entity.getShape(), entity.r), drawable[j]), 's', true);
         j++;
     }
 };
@@ -613,13 +710,16 @@ var drawRocks = function (dt) {
         else if (r.r < -360) {
             r.r += 360;
         }
-        drawEntity(r, dt);
+        drawEntity(r, dt, drawableRocks);
         i++;
     }
 };
 // Calculate and draw player ship
 var drawPlayer = function (dt) {
     if (dt === void 0) { dt = 0; }
+    if (sploded) {
+        return;
+    }
     player.x = player.x !== 0 ? player.x : easel.w / 2;
     player.y = player.y !== 0 ? player.y : easel.h / 2;
     player.r += player.va * dt;
@@ -643,12 +743,24 @@ var drawPlayer = function (dt) {
     }
     player.x += player.vx * dt;
     player.y += player.vy * dt;
-    drawEntity(player, dt);
+    drawEntity(player, dt, drawablePlayers);
 };
-// Fire a bullet
-var fireBullet = function () {
-    var rad = Object(_utils_math__WEBPACK_IMPORTED_MODULE_4__["degreesToRadians"])(player.r);
-    aBullets.push(new _entities_Bullet__WEBPACK_IMPORTED_MODULE_5__["Bullet"](player.x + Math.sin(rad) * 14, player.y + -Math.cos(rad) * 14, player.vx + Math.sin(rad) * 350, player.vy + -Math.cos(rad) * 350));
+// Draw player explosion
+var drawSplosion = function (dt) {
+    var i = 0;
+    while (i < aSplodicles.length) {
+        var s = aSplodicles[i];
+        s.x += s.vx * dt;
+        s.y += s.vy * dt;
+        wrapAtEdges(s);
+        // rect(easel.cx, s.x - 2, s.y + 2, 4, 4, 'f');
+        Object(easel_js_lib_draw_arc__WEBPACK_IMPORTED_MODULE_2__["arc"])(easel.cx, s.x, s.y, s.radius, 0, 2 * Math.PI, 'f');
+        if (s.x < 0 || s.x > easel.w || s.y < 0 || s.y > easel.h) {
+            delete aSplodicles[i];
+            aSplodicles = aSplodicles.filter(function (b) { return typeof b !== 'undefined'; });
+        }
+        i++;
+    }
 };
 // Draw bullets
 var drawBullets = function (dt) {
@@ -665,7 +777,41 @@ var drawBullets = function (dt) {
         i++;
     }
 };
-// Check for player
+// Check for player collisions
+var checkPlayerCollisions = function () {
+    if (sploded) {
+        return;
+    }
+    var i = 0;
+    var arr = [];
+    var playerRadius = player.radius / 2;
+    while (i < drawableRocks.length) {
+        var j = 0;
+        while (j < drawablePlayers.length) {
+            var dx = drawableRocks[i][0] - drawablePlayers[j][0];
+            var dy = drawableRocks[i][1] - drawablePlayers[j][1];
+            arr.push(Math.sqrt(dx * dx + dy * dy));
+            if (Math.sqrt(dx * dx + dy * dy) <
+                playerRadius + drawableRocks[i][2] // total radii
+            ) {
+                // player.reset(easel.w / 2, easel.h / 2);
+                // SPLODE!
+                sploded = true;
+                player.thrust = false;
+                player.reverse = false;
+                fired = false;
+                j = drawablePlayers.length;
+                i = drawableRocks.length;
+            }
+            j++;
+        }
+        i++;
+    }
+    if (sploded) {
+        genSplosion();
+    }
+    // console.log(arr);
+};
 // Call updates and redraws for all entities
 var update = function (ts, dt) {
     if (ts === void 0) { ts = 0; }
@@ -673,11 +819,18 @@ var update = function (ts, dt) {
     if (paused || !gameHasFocus) {
         return;
     }
+    drawableRocks = [];
+    drawablePlayers = [];
     easel.wipe();
     drawRocks(dt);
-    drawPlayer(dt);
     drawBullets(dt);
-    // checkPlayerCollisions();
+    if (!sploded) {
+        drawPlayer(dt);
+        checkPlayerCollisions();
+    }
+    else {
+        drawSplosion(dt);
+    }
     easel.cx.fillText('Space Rocks: Space Rocks!', easel.w / 2, easel.h / 2 - 100);
 };
 engine.addTask(update);
@@ -693,6 +846,9 @@ var stop = function () {
 };
 // 37, 38, 39, left up, right
 easel.cv.onkeydown = function (e) {
+    if (sploded) {
+        return;
+    }
     switch (e.keyCode) {
         case 38: // Up
             player.thrust = true;
@@ -717,6 +873,9 @@ easel.cv.onkeydown = function (e) {
     }
 };
 easel.cv.onkeyup = function (e) {
+    if (sploded) {
+        return;
+    }
     switch (e.keyCode) {
         case 38: // Up
             player.thrust = false;
