@@ -26,7 +26,7 @@ export class Rock implements Mover {
       return this.s;
     }
 
-    const div: number = 7;
+    const div: number = 13;
     const angle: number = (2 * Math.PI) / div;
 
     for (let i = 0; i < div; i++) {

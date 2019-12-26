@@ -86,6 +86,156 @@
 /************************************************************************/
 /******/ ({
 
+/***/ "../easel-js/lib/draw/arc.js":
+/*!***********************************!*\
+  !*** ../easel-js/lib/draw/arc.js ***!
+  \***********************************/
+/*! exports provided: arc */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "arc", function() { return arc; });
+/* harmony import */ var _mode__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./mode */ "../easel-js/lib/draw/mode.js");
+
+const arc = (cx, x, y, radius, radFrom, radTo, mode, antiClockwise = false) => {
+    cx.beginPath();
+    cx.arc(x, y, radius, radFrom, radTo, antiClockwise);
+    Object(_mode__WEBPACK_IMPORTED_MODULE_0__["drawWithMode"])(cx, mode);
+};
+
+
+/***/ }),
+
+/***/ "../easel-js/lib/draw/line.js":
+/*!************************************!*\
+  !*** ../easel-js/lib/draw/line.js ***!
+  \************************************/
+/*! exports provided: line */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "line", function() { return line; });
+/* harmony import */ var _mode__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./mode */ "../easel-js/lib/draw/mode.js");
+
+const line = (cx, points, mode, close) => {
+    cx.beginPath();
+    cx.moveTo(points[0][0], points[0][1]);
+    for (let i = 1; i < points.length; i++) {
+        cx.lineTo(points[i][0], points[i][1]);
+    }
+    if (close) {
+        cx.lineTo(points[0][0], points[0][1]);
+    }
+    Object(_mode__WEBPACK_IMPORTED_MODULE_0__["drawWithMode"])(cx, mode);
+};
+
+
+/***/ }),
+
+/***/ "../easel-js/lib/draw/mode.js":
+/*!************************************!*\
+  !*** ../easel-js/lib/draw/mode.js ***!
+  \************************************/
+/*! exports provided: drawWithMode */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "drawWithMode", function() { return drawWithMode; });
+var DrawModes;
+(function (DrawModes) {
+    DrawModes[DrawModes["f"] = 0] = "f";
+    DrawModes[DrawModes["s"] = 1] = "s";
+    DrawModes[DrawModes["fs"] = 2] = "fs";
+    DrawModes[DrawModes["sf"] = 3] = "sf"; // Stroke then fill
+})(DrawModes || (DrawModes = {}));
+const drawWithMode = (cx, mode) => {
+    switch (mode) {
+        case 'f':
+            cx.fill();
+            break;
+        case 's':
+            cx.stroke();
+            break;
+        case 'fs':
+            cx.fill();
+            cx.stroke();
+            break;
+        case 'sf':
+            cx.stroke();
+            cx.fill();
+            break;
+    }
+};
+
+
+/***/ }),
+
+/***/ "../easel-js/lib/index.js":
+/*!********************************!*\
+  !*** ../easel-js/lib/index.js ***!
+  \********************************/
+/*! exports provided: Easel */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Easel", function() { return Easel; });
+const defaultOpts = {
+    focus: false,
+    canvasId: 'base',
+    tabIndex: 0
+};
+class Easel {
+    constructor(id, opts) {
+        opts = Object.assign(defaultOpts, opts);
+        return this.bindTo(id, opts);
+    }
+    bindTo(id, opts) {
+        opts = Object.assign(defaultOpts, opts);
+        const div = document.getElementById(id);
+        const cv = document.createElement('canvas');
+        const divStyle = window.getComputedStyle(div);
+        cv.id = opts.canvasId || 'base';
+        cv.style.width = divStyle.width;
+        cv.style.height = divStyle.height;
+        div.appendChild(cv);
+        this.cv = cv;
+        this.cx = this.cv.getContext('2d');
+        this.setupCanvas(opts);
+        return this;
+    }
+    setupCanvas(opts) {
+        if (opts) {
+            if (typeof opts.tabIndex !== 'undefined') {
+                this.cv.tabIndex = opts.tabIndex;
+            }
+            if (opts.focus) {
+                this.cv.focus();
+            }
+        }
+        const cvStyle = window.getComputedStyle(this.cv);
+        this.cv.setAttribute('width', cvStyle.width);
+        this.cv.setAttribute('height', cvStyle.height);
+        this.w = parseInt(cvStyle.width);
+        this.h = parseInt(cvStyle.height);
+        this.rt = this.cv.getBoundingClientRect();
+    }
+    config(conf) {
+        for (let i in conf) {
+            this.cx[i] = conf[i];
+        }
+    }
+    wipe() {
+        this.cx.clearRect(0, 0, this.w, this.h);
+    }
+}
+
+
+/***/ }),
+
 /***/ "./node_modules/anim-loop-engine/lib/index.js":
 /*!****************************************************!*\
   !*** ./node_modules/anim-loop-engine/lib/index.js ***!
@@ -150,143 +300,6 @@ class AnimLoopEngine {
     }
 }
 //# sourceMappingURL=index.js.map
-
-/***/ }),
-
-/***/ "./node_modules/easel-js/lib/draw/arc.js":
-/*!***********************************************!*\
-  !*** ./node_modules/easel-js/lib/draw/arc.js ***!
-  \***********************************************/
-/*! exports provided: arc */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "arc", function() { return arc; });
-/* harmony import */ var _mode__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./mode */ "./node_modules/easel-js/lib/draw/mode.js");
-
-const arc = (cx, x, y, radius, radFrom, radTo, mode, antiClockwise = false) => {
-    cx.beginPath();
-    cx.arc(x, y, radius, radFrom, radTo, antiClockwise);
-    Object(_mode__WEBPACK_IMPORTED_MODULE_0__["drawWithMode"])(cx, mode);
-};
-
-
-/***/ }),
-
-/***/ "./node_modules/easel-js/lib/draw/line.js":
-/*!************************************************!*\
-  !*** ./node_modules/easel-js/lib/draw/line.js ***!
-  \************************************************/
-/*! exports provided: line */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "line", function() { return line; });
-/* harmony import */ var _mode__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./mode */ "./node_modules/easel-js/lib/draw/mode.js");
-
-const line = (cx, points, mode, close) => {
-    cx.beginPath();
-    // console.log(points);
-    cx.moveTo(points[0][0], points[0][1]);
-    for (let i = 1; i < points.length; i++) {
-        cx.lineTo(points[i][0], points[i][1]);
-    }
-    if (close) {
-        cx.lineTo(points[0][0], points[0][1]);
-    }
-    Object(_mode__WEBPACK_IMPORTED_MODULE_0__["drawWithMode"])(cx, mode);
-};
-
-
-/***/ }),
-
-/***/ "./node_modules/easel-js/lib/draw/mode.js":
-/*!************************************************!*\
-  !*** ./node_modules/easel-js/lib/draw/mode.js ***!
-  \************************************************/
-/*! exports provided: drawWithMode */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "drawWithMode", function() { return drawWithMode; });
-var DrawModes;
-(function (DrawModes) {
-    DrawModes[DrawModes["f"] = 0] = "f";
-    DrawModes[DrawModes["s"] = 1] = "s";
-    DrawModes[DrawModes["fs"] = 2] = "fs";
-    DrawModes[DrawModes["sf"] = 3] = "sf"; // Stroke then fill
-})(DrawModes || (DrawModes = {}));
-const drawWithMode = (cx, mode) => {
-    switch (mode) {
-        case 'f':
-            cx.fill();
-            break;
-        case 's':
-            cx.stroke();
-            break;
-        case 'fs':
-            cx.fill();
-            cx.stroke();
-            break;
-        case 'sf':
-            cx.stroke();
-            cx.fill();
-            break;
-    }
-};
-
-
-/***/ }),
-
-/***/ "./node_modules/easel-js/lib/index.js":
-/*!********************************************!*\
-  !*** ./node_modules/easel-js/lib/index.js ***!
-  \********************************************/
-/*! exports provided: Easel */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Easel", function() { return Easel; });
-class Easel {
-    constructor(id, opts) {
-        return this.bindTo(id, opts);
-    }
-    bindTo(id, opts) {
-        this.cv = document.getElementById(id);
-        this.cx = this.cv.getContext('2d');
-        this.setupCanvas(opts);
-        return this;
-    }
-    setupCanvas(opts) {
-        if (opts) {
-            if (typeof opts.tabIndex !== 'undefined') {
-                this.cv.tabIndex = opts.tabIndex;
-            }
-            if (opts.focus) {
-                this.cv.focus();
-            }
-        }
-        const cvStyle = window.getComputedStyle(this.cv);
-        this.cv.setAttribute('width', cvStyle.width);
-        this.cv.setAttribute('height', cvStyle.height);
-        this.w = parseInt(cvStyle.width);
-        this.h = parseInt(cvStyle.height);
-        this.rt = this.cv.getBoundingClientRect();
-    }
-    config(conf) {
-        for (let i in conf) {
-            this.cx[i] = conf[i];
-        }
-    }
-    wipe() {
-        this.cx.clearRect(0, 0, this.w, this.h);
-    }
-}
-
 
 /***/ }),
 
@@ -419,7 +432,7 @@ var Rock = /** @class */ (function () {
         if (this.s.length > 0) {
             return this.s;
         }
-        var div = 7;
+        var div = 13;
         var angle = (2 * Math.PI) / div;
         for (var i = 0; i < div; i++) {
             this.s.push([
@@ -476,9 +489,9 @@ var Splodicle = /** @class */ (function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var anim_loop_engine__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! anim-loop-engine */ "./node_modules/anim-loop-engine/lib/index.js");
-/* harmony import */ var easel_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! easel-js */ "./node_modules/easel-js/lib/index.js");
-/* harmony import */ var easel_js_lib_draw_arc__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! easel-js/lib/draw/arc */ "./node_modules/easel-js/lib/draw/arc.js");
-/* harmony import */ var easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! easel-js/lib/draw/line */ "./node_modules/easel-js/lib/draw/line.js");
+/* harmony import */ var _easel_js_lib_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../easel-js/lib/index */ "../easel-js/lib/index.js");
+/* harmony import */ var _easel_js_lib_draw_arc__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../easel-js/lib/draw/arc */ "../easel-js/lib/draw/arc.js");
+/* harmony import */ var _easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../easel-js/lib/draw/line */ "../easel-js/lib/draw/line.js");
 /* harmony import */ var _utils_math__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./utils/math */ "./src/utils/math.ts");
 /* harmony import */ var _entities_Bullet__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./entities/Bullet */ "./src/entities/Bullet.ts");
 /* harmony import */ var _entities_Player__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./entities/Player */ "./src/entities/Player.ts");
@@ -492,11 +505,9 @@ var __spreadArrays = (undefined && undefined.__spreadArrays) || function () {
     return r;
 };
 
-// import { AnimLoopEngine } from '../../anim-loop-engine/lib/index';
-// import { Easel } from '../../easel-js/lib/index';
-// import { arc } from '../../easel-js/lib/draw/arc';
-// import { line } from '../../easel-js/lib/draw/line';
-// import { rect } from '../../easel-js/lib/draw/rect';
+// import { Easel } from 'easel-js';
+// import { arc } from 'easel-js/lib/draw/arc';
+// import { line } from 'easel-js/lib/draw/line';
 
 
 
@@ -505,42 +516,49 @@ var __spreadArrays = (undefined && undefined.__spreadArrays) || function () {
 
 
 
-var initNumRocks = 4;
+var controls = {
+    thrust: { key: 'Up', code: 38 },
+    reverse: { key: 'Down', code: 40 },
+    left: { key: 'Left', code: 37 },
+    right: { key: 'Right', code: 39 },
+    fire: { key: 'Space', code: 32 }
+};
 var fired = false;
 var gameHasFocus = true;
+var initNumRocks = 2;
+var level = 1;
+var lives = 3;
+var mode = 'menu'; // 'menu' | 'config' | 'game' | 'end'
 var paused = false;
+var score = 0;
 var sploded = false;
 // Arrays of shit
 var aBullets = [];
 var aRocks = [];
 var aSplodicles = [];
-var drawableRocks = [];
-var drawablePlayers = [];
 var collisionRocks = [];
 var collisionPlayers = [];
 var engine = new anim_loop_engine__WEBPACK_IMPORTED_MODULE_0__["AnimLoopEngine"]();
-var easel = new easel_js__WEBPACK_IMPORTED_MODULE_1__["Easel"]('sr', { tabIndex: 0, focus: true });
-easel.config({
+var esl = new _easel_js_lib_index__WEBPACK_IMPORTED_MODULE_1__["Easel"]('sr', { tabIndex: 0, focus: true });
+esl.config({
     fillStyle: '#FFF',
-    font: '50px VT323',
     lineWidth: 2,
     strokeStyle: '#FFF',
-    textAlign: 'center',
     textBaseline: 'middle'
 });
-var scalingBase = easel.w > easel.h ? easel.w : easel.h;
+var scalingBase = esl.w > esl.h ? esl.w : esl.h;
 var rockRadius = scalingBase / 45;
 var rockBaseVel = scalingBase / 15;
 var calcRockSpawnCoord = function (axis) {
     if (axis === 'x') {
         return Math.random() < 0.5
-            ? (easel.w / 4) * Math.random()
-            : (easel.w / 4) * Math.random() + (easel.w / 3) * 2;
+            ? (esl.w / 4) * Math.random()
+            : (esl.w / 4) * Math.random() + (esl.w / 3) * 2;
     }
     else {
         return Math.random() < 0.5
-            ? (easel.h / 4) * Math.random()
-            : (easel.h / 4) * Math.random() + (easel.h / 3) * 2;
+            ? (esl.h / 4) * Math.random()
+            : (esl.h / 4) * Math.random() + (esl.h / 3) * 2;
     }
 };
 var rotateShape = function (shape, angle) {
@@ -573,34 +591,41 @@ var wrapAtEdges = function (entity) {
     // Wrap main rock at screen edges
     // x < 0
     if (entity.x < 0) {
-        entity.x += easel.w;
+        entity.x += esl.w;
     }
     // x > width
-    else if (entity.x > easel.w) {
-        entity.x -= easel.w;
+    else if (entity.x > esl.w) {
+        entity.x -= esl.w;
     }
     // y < 0
     if (entity.y < 0) {
-        entity.y += easel.h;
+        entity.y += esl.h;
     }
     // y > height
-    if (entity.y > easel.h) {
-        entity.y -= easel.h;
+    if (entity.y > esl.h) {
+        entity.y -= esl.h;
     }
 };
 var randomNeg = function () { return (Math.random() < 0.5 ? 1 : -1); };
-// GENERATE SHIT
+// --- Generate entities, and other lovely things
 // Gen player
 var player = new _entities_Player__WEBPACK_IMPORTED_MODULE_6__["Player"]();
-// Gen rocks
-for (var i = 0; i < 6; i++) {
-    var vx = (Math.random() * rockBaseVel + 15) * randomNeg();
-    var vy = (Math.random() * rockBaseVel + 15) * randomNeg();
-    aRocks.push(new _entities_Rock__WEBPACK_IMPORTED_MODULE_7__["Rock"](calcRockSpawnCoord('x'), calcRockSpawnCoord('y'), vx, vy, Math.random() * 100 * randomNeg(), rockRadius));
-}
+// Generate rocks
+var genRocks = function (num) {
+    if (num === void 0) { num = initNumRocks; }
+    // Gen rocks
+    for (var i = 0; i < num; i++) {
+        var vx = (Math.random() * rockBaseVel + 15) * randomNeg();
+        var vy = (Math.random() * rockBaseVel + 15) * randomNeg();
+        aRocks.push(new _entities_Rock__WEBPACK_IMPORTED_MODULE_7__["Rock"](calcRockSpawnCoord('x'), calcRockSpawnCoord('y'), vx, vy, Math.random() * 100 * randomNeg(), rockRadius));
+    }
+};
+var clearRocks = function () {
+    aRocks = [];
+};
 // Gen rock's screen boundaries
 var genRockInner = function (radius) {
-    return [0 + radius, easel.w - radius, easel.h - radius, 0 + radius];
+    return [0 + radius, esl.w - radius, esl.h - radius, 0 + radius];
 };
 // Generate player explosion
 var genSplosion = function () {
@@ -613,7 +638,7 @@ var genSplosion = function () {
     setTimeout(function () {
         aSplodicles = [];
         sploded = false;
-        player.reset(easel.w / 2, easel.h / 2);
+        player.reset(esl.w / 2, esl.h / 2);
     }, 3000);
 };
 // Fire a bullet
@@ -626,7 +651,7 @@ var killRock = function (i) {
     if (aRocks[i].gen > 1) {
         var j = 0;
         while (j < 2) {
-            aRocks.push(new _entities_Rock__WEBPACK_IMPORTED_MODULE_7__["Rock"](aRocks[i].x + Math.random() * aRocks[i].radius / 2 * randomNeg(), aRocks[i].y + Math.random() * aRocks[i].radius / 2 * randomNeg(), aRocks[i].vx + Math.random() * rockBaseVel * randomNeg(), aRocks[i].vy + Math.random() * rockBaseVel * randomNeg(), Math.random() * 100 * randomNeg(), rockRadius, aRocks[i].gen - 1));
+            aRocks.push(new _entities_Rock__WEBPACK_IMPORTED_MODULE_7__["Rock"](aRocks[i].x + ((Math.random() * aRocks[i].radius) / 2) * randomNeg(), aRocks[i].y + ((Math.random() * aRocks[i].radius) / 2) * randomNeg(), aRocks[i].vx + Math.random() * rockBaseVel * randomNeg(), aRocks[i].vy + Math.random() * rockBaseVel * randomNeg(), Math.random() * 100 * randomNeg(), rockRadius, aRocks[i].gen - 1));
             j++;
         }
     }
@@ -653,41 +678,41 @@ var drawEntity = function (index, entity, colliders) {
     // Check for boundary overlap to generate faux-rocks:
     // Top left
     if (entity.x < inner[3] && entity.y < inner[0]) {
-        drawable.push([entity.x, entity.y + easel.h, entity.radius], [entity.x + easel.w, entity.y, entity.radius], [entity.x + easel.w, entity.y + easel.h, entity.radius]);
+        drawable.push([entity.x, entity.y + esl.h, entity.radius], [entity.x + esl.w, entity.y, entity.radius], [entity.x + esl.w, entity.y + esl.h, entity.radius]);
     }
     // Top right
     else if (entity.x > inner[1] && entity.y < inner[0]) {
-        drawable.push([entity.x - easel.w, entity.y, entity.radius], [entity.x - easel.w, entity.y + easel.h, entity.radius], [entity.x, entity.y + easel.h, entity.radius]);
+        drawable.push([entity.x - esl.w, entity.y, entity.radius], [entity.x - esl.w, entity.y + esl.h, entity.radius], [entity.x, entity.y + esl.h, entity.radius]);
     }
     // Bottom right
     else if (entity.x > inner[1] && entity.y > inner[2]) {
-        drawable.push([entity.x - easel.w, entity.y - easel.h, entity.radius], [entity.x, entity.y - easel.h, entity.radius], [entity.x - easel.w, entity.y, entity.radius]);
+        drawable.push([entity.x - esl.w, entity.y - esl.h, entity.radius], [entity.x, entity.y - esl.h, entity.radius], [entity.x - esl.w, entity.y, entity.radius]);
     }
     // Bottom left
     else if (entity.x < inner[3] && entity.y > inner[2]) {
-        drawable.push([entity.x, entity.y - easel.h, entity.radius], [entity.x + easel.w, entity.y - easel.h, entity.radius], [entity.x + easel.w, entity.y, entity.radius]);
+        drawable.push([entity.x, entity.y - esl.h, entity.radius], [entity.x + esl.w, entity.y - esl.h, entity.radius], [entity.x + esl.w, entity.y, entity.radius]);
     }
     // Top
     else if (entity.y < inner[0]) {
-        drawable.push([entity.x, entity.y + easel.h, entity.radius]);
+        drawable.push([entity.x, entity.y + esl.h, entity.radius]);
     }
     // Right
     else if (entity.x > inner[1]) {
-        drawable.push([entity.x - easel.w, entity.y, entity.radius]);
+        drawable.push([entity.x - esl.w, entity.y, entity.radius]);
     }
     // Bottom
     else if (entity.y > inner[2]) {
-        drawable.push([entity.x, entity.y - easel.h, entity.radius]);
+        drawable.push([entity.x, entity.y - esl.h, entity.radius]);
     }
     // Left
     else if (entity.x < inner[3]) {
-        drawable.push([entity.x + easel.w, entity.y, entity.radius]);
+        drawable.push([entity.x + esl.w, entity.y, entity.radius]);
     }
     // Radius arc for testing
-    // arc(easel.cx, entity.x, entity.y, entity.radius, 0, 2 * Math.PI, 's');
+    // arc(esl.cx, entity.x, entity.y, entity.radius, 0, 2 * Math.PI, 's');
     var j = 0;
     while (j < drawable.length) {
-        Object(easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_3__["line"])(easel.cx, translateShape(rotateShape(entity.getShape(), entity.r), drawable[j]), 's', true);
+        Object(_easel_js_lib_draw_line__WEBPACK_IMPORTED_MODULE_3__["line"])(esl.cx, translateShape(rotateShape(entity.getShape(), entity.r), drawable[j]), 's', true);
         colliders.push(__spreadArrays(drawable[j], [index]));
         j++;
     }
@@ -715,8 +740,8 @@ var drawRocks = function (dt) {
 // Calculate and draw player ship
 var drawPlayer = function (dt) {
     if (dt === void 0) { dt = 0; }
-    player.x = player.x !== 0 ? player.x : easel.w / 2;
-    player.y = player.y !== 0 ? player.y : easel.h / 2;
+    player.x = player.x !== 0 ? player.x : esl.w / 2;
+    player.y = player.y !== 0 ? player.y : esl.h / 2;
     player.r += player.va * dt;
     if (player.thrust || player.reverse) {
         player.tx =
@@ -748,8 +773,8 @@ var drawSplosion = function (dt) {
         s.x += s.vx * dt;
         s.y += s.vy * dt;
         wrapAtEdges(s);
-        Object(easel_js_lib_draw_arc__WEBPACK_IMPORTED_MODULE_2__["arc"])(easel.cx, s.x, s.y, s.radius, 0, 2 * Math.PI, 'f');
-        if (s.x < 0 || s.x > easel.w || s.y < 0 || s.y > easel.h) {
+        Object(_easel_js_lib_draw_arc__WEBPACK_IMPORTED_MODULE_2__["arc"])(esl.cx, s.x, s.y, s.radius, 0, 2 * Math.PI, 'f');
+        if (s.x < 0 || s.x > esl.w || s.y < 0 || s.y > esl.h) {
             delete aSplodicles[i];
             aSplodicles = aSplodicles.filter(function (b) { return typeof b !== 'undefined'; });
         }
@@ -763,13 +788,36 @@ var drawBullets = function (dt) {
         var b = aBullets[i];
         b.x += b.vx * dt;
         b.y += b.vy * dt;
-        Object(easel_js_lib_draw_arc__WEBPACK_IMPORTED_MODULE_2__["arc"])(easel.cx, b.x, b.y, 2, 0, 2 * Math.PI, 'f');
-        if (b.x < 0 || b.x > easel.w || b.y < 0 || b.y > easel.h) {
+        Object(_easel_js_lib_draw_arc__WEBPACK_IMPORTED_MODULE_2__["arc"])(esl.cx, b.x, b.y, 2, 0, 2 * Math.PI, 'f');
+        if (b.x < 0 || b.x > esl.w || b.y < 0 || b.y > esl.h) {
             delete aBullets[i];
             aBullets = aBullets.filter(function (b) { return typeof b !== 'undefined'; });
         }
         i++;
     }
+};
+// Draw score
+var drawScore = function () {
+    esl.config({
+        font: '25px VT323',
+        textAlign: 'left'
+    });
+    var str = score.toString();
+    while (str.length < 8) {
+        str = '0' + str;
+    }
+    esl.cx.fillText("SCORE: " + str, 23, 30);
+};
+// Draw start menu
+var drawStartMenu = function () {
+    esl.config({
+        font: '50px VT323',
+        textAlign: 'center'
+    });
+    esl.cx.fillText('Space Rocks: Space Rocks!', esl.w / 2, esl.h / 2 - 100);
+    esl.config({ font: '25px VT323' });
+    esl.cx.fillText('Start [space]', esl.w / 2, esl.h / 2);
+    esl.cx.fillText('Configure [c]', esl.w / 2, esl.h / 2 + 40);
 };
 // Check for bullet collisions
 var checkBulletCollisions = function () {
@@ -795,7 +843,7 @@ var checkBulletCollisions = function () {
 };
 // Check for player collisions
 var checkPlayerCollisions = function () {
-    var playerRadius = player.radius / 2;
+    var playerRadius = player.radius * 0.75;
     // For each collideable rock...
     var i = 0;
     while (i < collisionRocks.length) {
@@ -831,18 +879,25 @@ var update = function (ts, dt) {
     }
     collisionRocks = [];
     collisionPlayers = [];
-    easel.wipe();
+    esl.wipe();
     drawRocks(dt);
-    drawBullets(dt);
-    if (!sploded) {
-        drawPlayer(dt);
-        checkBulletCollisions();
-        checkPlayerCollisions();
+    switch (mode) {
+        case 'game':
+            drawBullets(dt);
+            if (!sploded) {
+                drawPlayer(dt);
+                checkBulletCollisions();
+                checkPlayerCollisions();
+            }
+            else {
+                drawSplosion(dt);
+            }
+            drawScore();
+            break;
+        case 'menu':
+            drawStartMenu();
+            break;
     }
-    else {
-        drawSplosion(dt);
-    }
-    easel.cx.fillText('Space Rocks: Space Rocks!', easel.w / 2, easel.h / 2 - 100);
 };
 engine.addTask(update);
 var start = function () {
@@ -854,62 +909,103 @@ var stop = function () {
     engine.stop();
 };
 // 37, 38, 39, left up, right
-easel.cv.onkeydown = function (e) {
+esl.cv.onkeydown = function (e) {
     if (sploded) {
         return;
     }
-    switch (e.keyCode) {
-        case 38: // Up
-            player.thrust = true;
+    switch (mode) {
+        case 'game':
+            switch (e.keyCode) {
+                case controls.thrust.code: // Up
+                    player.thrust = true;
+                    break;
+                case controls.reverse.code: // Down
+                    player.reverse = true;
+                    break;
+                case controls.left.code: // Left
+                    player.va = -300;
+                    break;
+                case controls.right.code: // Right
+                    player.va = 300;
+                    break;
+                case controls.fire.code: // Space (fire)
+                    if (!fired) {
+                        fired = true;
+                        fireBullet();
+                    }
+                    break;
+            }
             break;
-        case 40: // Down
-            player.reverse = true;
-            // player.vx *= -0.2;
-            // player.vy *= -0.2;
+        case 'menu':
+            switch (e.keyCode) {
+                case 32: // Space (start)
+                    clearRocks();
+                    genRocks();
+                    mode = 'game';
+                    break;
+                case 67: // C (configure keys)
+                    mode = 'config';
+                    break;
+            }
             break;
-        case 37: // Left
-            player.va = -300;
-            break;
-        case 39: // Right
-            player.va = 300;
-            break;
-        case 32: // Space (fire)
-            if (!fired) {
-                fired = true;
-                fireBullet();
+        case 'config':
+            var key = void 0;
+            switch (e.keyCode) {
+                case 32:
+                    key = 'Space';
+                    break;
+                case 37:
+                    key = 'Left';
+                    break;
+                case 38:
+                    key = 'Up';
+                    break;
+                case 39:
+                    key = 'Right';
+                    break;
+                case 40:
+                    key = 'Down';
+                    break;
+                default:
+                    key = e.key;
             }
             break;
     }
 };
-easel.cv.onkeyup = function (e) {
+esl.cv.onkeyup = function (e) {
     if (sploded) {
         return;
     }
-    switch (e.keyCode) {
-        case 38: // Up
-            player.thrust = false;
-            break;
-        case 40: // Down
-            player.reverse = false;
-            break;
-        case 37: // Left
-        case 39: // Right
-            player.va = 0;
-            break;
-        case 32: // Space (stop firing)
-            fired = false;
+    switch (mode) {
+        case 'game':
+            switch (e.keyCode) {
+                case 38: // Up
+                    player.thrust = false;
+                    break;
+                case 40: // Down
+                    player.reverse = false;
+                    break;
+                case 37: // Left
+                case 39: // Right
+                    player.va = 0;
+                    break;
+                case 32: // Space (stop firing)
+                    fired = false;
+                    break;
+            }
             break;
     }
 };
 // FOCUS/BLUR
-easel.cv.onblur = function () {
+esl.cv.onblur = function () {
     gameHasFocus = false;
     stop();
 };
-easel.cv.onfocus = function () {
+esl.cv.onfocus = function () {
     gameHasFocus = true;
     start();
 };
+genRocks(8);
 start();
 
 

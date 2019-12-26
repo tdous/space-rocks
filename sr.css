@@ -7,14 +7,16 @@
 }
 
 body,
-canvas#sr {
+#sr {
   height: 100vh;
   overflow: hidden;
   width: 100vw;
 }
-
-canvas#sr {
-  background: #000;
+#sr { background: #000; }
+#sr canvas {
+  left: 0;
   outline: none;
+  position: absolute;
+  top: 0;
   z-index: 1;
 }
