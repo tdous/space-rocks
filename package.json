@@ -11,9 +11,9 @@
   "license": "MIT",
   "devDependencies": {
     "gulp": "^4.0.2",
-    "ts-loader": "^6.2.1",
+    "ts-loader": "^9.4.2",
     "typescript": "^3.7.3",
-    "webpack-stream": "^5.2.1"
+    "webpack-stream": "^7.0.0"
   },
   "dependencies": {
     "anim-loop-engine": "github:tdous/anim-loop-engine",
